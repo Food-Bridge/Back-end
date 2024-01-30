@@ -9,19 +9,26 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
 from pathlib import Path
 from datetime import timedelta
+import os
+import json
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+ROOT_DIR = os.path.dirname(BASE_DIR)
+SECRET_BASE_FILE = os.path.join(BASE_DIR, 'secrets.json')
+secrets = json.loads(open(SECRET_BASE_FILE).read())
+for key, value in secrets.items():
+    setattr(sys.modules[__name__], key, value)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-vw1g(1+hfdy-+!!gz!=*bh4zud2f!$9ld6#jizvb6v74jrgtr3'
+ALGORITHM = "HS256"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -48,14 +55,23 @@ INSTALLED_APPS = [
     'corsheaders',
 
     ##### app_name
+    'cart',
+    'category',
+    'community',
+    'coupon',
+    'like',
+    'menu',
+    'restaurant',
     'users',
-
+    'users_coupon',
+    'review',
 
     ##### ModelField
     'phonenumber_field',
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -66,6 +82,37 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'smartorder.urls'
+
+CORS_ORIGIN_ALLOW_ALL = True
+
+##### https://pypi.org/project/django-cors-headers/
+##### A list of HTTP verbs that are allowed for the actual request. Defaults to:
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+
+##### https://pypi.org/project/django-cors-headers/
+##### The list of non-standard HTTP headers that you permit in requests from the browser. Sets the Access-Control-Allow-Headers header in responses to preflight requests. Defaults to:
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+)
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+]
 
 TEMPLATES = [
     {
@@ -88,15 +135,15 @@ WSGI_APPLICATION = 'smartorder.wsgi.application'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',      
-    )
+    ),
 }
 
-##### 액세스 토큰/새로고침 토큰의 시간 늘리기
+##### SIMPLE_JWT 설정
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
+    'BLACKLIST_AFTER_ROTATION': False,
     'TOKEN_USER_CLASS': 'users.User',
 }
 

@@ -2,11 +2,18 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import exceptions
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication, CSRFCheck
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.views import APIView
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication, CSRFCheck
+from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, AddressSerializer, OrderSerializer
+from users.models import User, Address, Order
+from django.contrib.auth import authenticate
+from django.http import JsonResponse
+import requests, json
+from urllib.parse import urlparse
 
 # Create your views here.
 ##### 시리얼라이저를 사용해서 유저를 저장하고(=회원가입), JWT토큰을 발급받아 쿠키에 저장한다.
@@ -58,9 +65,42 @@ class LoginAPIView(generics.GenericAPIView):
 
 class LogoutAPIView(generics.GenericAPIView):
     serializer_class = LogoutSerializer
-    authentication_classes = [SessionAuthentication, TokenAuthentication]
-    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        request.user.auth_token.delete()
+        if request.user.auth_token:
+            request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
+    
+class OnlyAuthenticatiedUserView(APIView):
+    authentication_classes = [JWTAuthentication]
+
+    def get(self, request):
+        user = request.user
+        if not user:
+            return Response({"error" : "접근 권한이 없다."}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"message" : "Accepted"})
+    
+class UserAddressAPIView(generics.ListAPIView):
+    serializer_class = AddressSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Address.objects.filter(user_id=user_id)
+    
+    def KaKaoAPIView(address):
+        address = "서울시 강남구 도곡동"    
+    
+        url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
+        results = requests.get(urlparse(url).geturl(), headers={"Authorization" : "KakaoAK 3086e0fa06801c242f3f6d1ca5ab6bef"}).json()
+
+        lat = results["documents"][0]["x"]
+        lng = results["documents"][0]["y"]
+        crd = {"lat": str(lat), "lng": str(lng)}
+        return JsonResponse(crd, status=201)
+
+class UserOrderAPIView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Order.objects.filter(user_id=user_id)
