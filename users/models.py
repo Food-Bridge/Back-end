@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.validators import RegexValidator
@@ -5,6 +6,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from coupon.models import Coupon
 from restaurant.models import Restaurant
 import requests
+
+state = getattr(settings, "KAKAO_REST_API_KEY") 
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, username, password=None):
@@ -73,7 +76,7 @@ class User(AbstractBaseUser):
 class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     detail_address = models.CharField(max_length=255, verbose_name='address')
-    building_name = models.CharField(max_length=255)
+    building_name = models.CharField(max_length=255, null=True)
     road_address = models.CharField(max_length=255, blank=True, null=True)
     jibun_address = models.CharField(max_length=255, blank=True, null=True)
     is_default = models.BooleanField(default=False)
@@ -83,7 +86,7 @@ class Address(models.Model):
     longitude = models.FloatField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        api_key = "3086e0fa06801c242f3f6d1ca5ab6bef"  # API Key 관리 중요
+        api_key = getattr(settings, "KAKAO_REST_API_KEY") 
         if not self.latitude and not self.longitude:
             address_to_geocode = f"{self.detail_address}"
             response = requests.get(f"https://dapi.kakao.com/v2/local/search/address.json?query={address_to_geocode}",
