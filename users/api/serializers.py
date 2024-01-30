@@ -1,12 +1,15 @@
 from rest_framework import serializers
-from users.models import User
+from rest_framework_simplejwt.settings import api_settings
+from users.models import User, Address, Order
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from rest_framework.validators import UniqueValidator
 from phonenumber_field.modelfields import PhoneNumberField
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+from users.api.utils import generate_access_token, decode_access_token
+from rest_framework.authtoken.models import Token
 import phonenumbers
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -100,3 +103,23 @@ class LogoutSerializer(serializers.Serializer):
             RefreshToken(self.token).blacklist()
         except TokenError:
             self.fail('bad_token')
+
+class AddressSerializer(serializers.ModelSerializer):
+    # token = serializers.SerializerMethodField()
+    # user_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Address
+        fields = "__all__"
+
+    def get_token(self, obj):
+        user_token, created = Token.objects.get_or_create(user=obj.user)
+        return user_token.key
+
+    def get_user_id(self, obj):
+        return obj.user_id
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = "__all__"
