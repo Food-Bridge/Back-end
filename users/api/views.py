@@ -57,7 +57,7 @@ class RegisterAPIView(generics.GenericAPIView):
             raise exceptions.PermissionDenied(f'CSRF Failed: {reason}')
 
 class ProfileView(generics.RetrieveUpdateAPIView):
-    
+    permission_classes = [IsAuthenticated]
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
 
