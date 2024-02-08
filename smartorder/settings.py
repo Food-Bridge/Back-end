@@ -68,6 +68,9 @@ INSTALLED_APPS = [
 
     ##### ModelField
     'phonenumber_field',
+    
+    ##### drf_yasg
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

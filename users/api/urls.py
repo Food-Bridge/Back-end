@@ -1,5 +1,22 @@
-from django.urls import path
+from django.urls import path, include, re_path
 from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAuthenticatiedUserView, UserAddressAPIView, UserOrderAPIView
+from django.contrib import admin
+
+from django.conf import settings
+from django.conf.urls.static import static
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="스마트 오더 API",
+        default_version="v1",
+        description="스마트 오더 API 문서",
+    ),
+    public=True
+)
+
 # Access Token, Refresh Token 
 # Logic1. 요청을 보내자마자 액세스 토큰 형식으로 응답을 받고 새로고침된다.
 # Logic2. 액세스 토큰의 한계 : 기본적으로 5분 동안만 지속된다는 문제가 발생 → 5분이 지나면 자동 폐기
@@ -27,4 +44,13 @@ urlpatterns = [
     path('<int:user_id>/orders/', UserOrderAPIView.as_view(), name="orders"),
 
     path('authonly/', OnlyAuthenticatiedUserView.as_view(), name="authonly"),
+]
+
+urlpatterns += [
+    re_path(r'swagger(?P<format>\.json|\.yaml)$',
+        schema_view.without_ui(cache_timeout=0), name="schema-json"),
+    re_path(r'swagger/$', 
+        schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    re_path(r'redoc/$',
+        schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
