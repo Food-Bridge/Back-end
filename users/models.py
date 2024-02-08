@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.validators import RegexValidator
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -70,6 +72,18 @@ class User(AbstractBaseUser):
     objects = CustomUserManager()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
+
+class Profile(models.Model):
+    # primary_key를 User의 pk로 설정하여 통합 관리
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    nickname = models.CharField(max_length=20)
+    image = models.ImageField(upload_to='profile/', default='default.png')
+    
+    @receiver(post_save, sender=User)
+    def create_user_profile(sender, instance, created, **kwargs):
+        if created:
+            Profile.objects.create(user=instance)
+        
 
 ##### 위도, 경도는 미반영
 ##### 사용자의 거주지를 등록하여 조회가 가능한지에 먼저 포커싱

@@ -8,8 +8,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication, CSRFCheck
-from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, AddressSerializer, OrderSerializer
-from users.models import User, Address, Order
+from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, AddressSerializer, OrderSerializer, ProfileSerializer
+from users.models import User, Address, Order, Profile
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
 import requests, json
@@ -55,6 +55,11 @@ class RegisterAPIView(generics.GenericAPIView):
         reason = check.process_view(request, None, (), {})
         if reason:
             raise exceptions.PermissionDenied(f'CSRF Failed: {reason}')
+
+class ProfileView(generics.RetrieveUpdateAPIView):
+    
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
 
 class LoginAPIView(generics.GenericAPIView):
     serializer_class = LoginSerializer
