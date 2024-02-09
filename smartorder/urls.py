@@ -19,8 +19,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    ##### 마이 페이지
-    path('', include('users.api.urls')),
     
     ##### 메인 페이지
     path('users/', include('users.api.urls')),
