@@ -10,6 +10,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from users.api.utils import generate_access_token, decode_access_token
 from rest_framework.authtoken.models import Token
+from rest_framework.exceptions import ValidationError
 import phonenumbers
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -96,13 +97,18 @@ class LoginSerializer(serializers.ModelSerializer):
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
     def validate(self, attrs):
-        self.token = attrs['refresh']
-        return attrs
-    def save(self, **kwargs):
+        self.token = attrs.get('refresh')
+        
+        if not self.token:
+            raise ValidationError({'message' : "유효한 토큰이 아닙니다."})
         try:
-            RefreshToken(self.token).blacklist()
-        except TokenError:
-            self.fail('bad_token')
+            refresh_token = RefreshToken(self.token)
+            refresh_token.verify()
+        except TokenError as e:
+            raise ValidationError({'message': e})
+        return attrs
+    def save(self):
+        RefreshToken(self.token).blacklist()
 
 class AddressSerializer(serializers.ModelSerializer):
     # token = serializers.SerializerMethodField()
