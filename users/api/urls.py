@@ -1,5 +1,5 @@
 from django.urls import path
-from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAuthenticatiedUserView, UserAddressAPIView, UserOrderAPIView, GetKakaoAccessView
+from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAuthenticatiedUserView, UserAddressAPIView, UserOrderAPIView, GetKakaoAccessView, GetGoogleAccessView
 # Access Token, Refresh Token 
 # Logic1. 요청을 보내자마자 액세스 토큰 형식으로 응답을 받고 새로고침된다.
 # Logic2. 액세스 토큰의 한계 : 기본적으로 5분 동안만 지속된다는 문제가 발생 → 5분이 지나면 자동 폐기
@@ -30,4 +30,6 @@ urlpatterns = [
     
     ##### 카카오 소셜 로그인
     path('kakao/login/callback/', GetKakaoAccessView.as_view(), name="kakao_callback"),
+    # 구글 소셜로그인 콜백(로그인/회원가입)
+    path('google/login/callback/', GetGoogleAccessView.as_view(), name='google_callback'),
 ]
