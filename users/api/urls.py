@@ -1,5 +1,5 @@
 from django.urls import path, include, re_path
-from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAuthenticatiedUserView, UserAddressAPIView, UserOrderAPIView
+from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAuthenticatiedUserView, UserAddressAPIView, UserOrderAPIView, GetGoogleAccessView
 from django.contrib import admin
 
 from django.conf import settings
@@ -44,6 +44,9 @@ urlpatterns = [
     path('<int:user_id>/orders/', UserOrderAPIView.as_view(), name="orders"),
 
     path('authonly/', OnlyAuthenticatiedUserView.as_view(), name="authonly"),
+    
+    # 구글 소셜로그인 콜백(로그인/회원가입)
+    path('google/callback/', GetGoogleAccessView.as_view(), name='google_callback'),
 ]
 
 urlpatterns += [

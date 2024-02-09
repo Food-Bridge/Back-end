@@ -1,4 +1,6 @@
-from rest_framework import generics, status
+import requests
+from rest_framework.renderers import JSONRenderer
+from rest_framework import generics, status, exceptions
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import exceptions
@@ -12,8 +14,11 @@ from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSer
 from users.models import User, Address, Order
 from django.contrib.auth import authenticate
 from django.http import JsonResponse
-import requests, json
+from django.shortcuts import redirect
+from django.conf import settings
 from urllib.parse import urlparse
+from json import JSONDecodeError
+from allauth.socialaccount.models import SocialAccount
 
 # Create your views here.
 ##### 시리얼라이저를 사용해서 유저를 저장하고(=회원가입), JWT토큰을 발급받아 쿠키에 저장한다.
@@ -104,3 +109,40 @@ class UserOrderAPIView(generics.ListAPIView):
     def get_queryset(self):
         user_id = self.kwargs['user_id']
         return Order.objects.filter(user_id=user_id)
+    
+class GetGoogleAccessView(APIView):
+    def post(self, request, *args, **kwargs):
+        google_access_token = request.data.get("access_token")
+        email_req = requests.get(f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={google_access_token}")
+        email_req_status = email_req.status_code
+        
+        if email_req_status != 200:
+            return Response({'err_msg': 'failed to get email'}, status=status.HTTP_400_BAD_REQUEST)
+    
+        email_req_json = email_req.json()
+        email = email_req_json.get('email')
+        
+        try:
+            user = User.objects.get(email=email)
+            message = "구글 소셜 로그인이 완료되었습니다."
+        except User.DoesNotExist:
+            user = User.objects.create(email=email)
+            message = "구글 소셜 회원가입이 완료되었습니다."
+        except SocialAccount.DoesNotExist:
+            return JsonResponse({'err_msg': 'email exists but not social user'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        token = TokenObtainPairSerializer.get_token(user)
+        refresh_token = str(token)
+        access_token = str(token.access_token)
+        
+        res = Response({
+            "user": email,
+            "message": message,
+            "token": {
+                "access": access_token,
+                "refresh": refresh_token
+            }
+        }, status=status.HTTP_200_OK)
+        
+        return res
+    
