@@ -48,9 +48,20 @@ INSTALLED_APPS = [
 
     ##### rest_framework
     'rest_framework',
+    'rest_framework.authtoken',
     'rest_framework_simplejwt',
 	'rest_framework_simplejwt.token_blacklist',
 
+    ##### dj_rest_auth
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+
+    ##### allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    
     ##### corsheaders
     'corsheaders',
 
@@ -79,7 +90,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
+
+# ACCOUNT 필드 사용 여부에 따라 설정
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None # username 필드 사용 x
+ACCOUNT_EMAIL_REQUIRED = True            # email 필드 사용 o
+ACCOUNT_USERNAME_REQUIRED = False        # username 필드 사용 x
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
 
 ROOT_URLCONF = 'smartorder.urls'
 
