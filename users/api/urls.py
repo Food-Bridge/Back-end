@@ -31,6 +31,10 @@ schema_view = get_schema_view(
 # path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
 
+from django.urls import path
+from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, GetKakaoAccessView
+from . import views
+
 urlpatterns = [
     ##### 로그인, 로그아웃, 회원가입
     path('signup/', RegisterAPIView.as_view(),name="signup"),
@@ -44,6 +48,9 @@ urlpatterns = [
     path('<int:user_id>/orders/', UserOrderAPIView.as_view(), name="orders"),
 
     path('authonly/', OnlyAuthenticatiedUserView.as_view(), name="authonly"),
+    
+    ##### 카카오 소셜 로그인
+    path('kakao/login/callback/', GetKakaoAccessView.as_view(), name="kakao_callback"),
 ]
 
 urlpatterns += [
