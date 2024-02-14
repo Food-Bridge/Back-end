@@ -12,6 +12,7 @@ from users.api.utils import generate_access_token, decode_access_token
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 import phonenumbers
+from django.contrib.auth import get_user_model
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=3, required=True)
@@ -129,3 +130,15 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = "__all__"
+
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'password', 'username')
+
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username')
