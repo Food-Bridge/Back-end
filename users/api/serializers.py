@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.settings import api_settings
-from users.models import User, Address, Order
+from users.models import User, Address, Order, Profile
 from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
@@ -129,3 +129,20 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = "__all__"
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['nickname', 'image']
+        
+    def create(self, validated_data):
+        instance = Profile.objects.create(**validated_data)
+        image_set = self.context['request'].FILES
+        for image_data in image_set.getlist('image'):
+            ext = str(image_data).split('.')[-1] # ext에 확장자 명이 담긴다.
+            ext = ext.lower() # 확장자를 소문자로 통일
+            if ext in ['jpg', 'jpeg','png',]:
+                Profile.objects.create(article=instance, image=image_data, image_original=image_data)
+            elif ext in ['gif','webp']:
+                Profile.objects.create(article=instance, image_original=image_data)
+        return instance

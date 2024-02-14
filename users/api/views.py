@@ -10,8 +10,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.authentication import CSRFCheck
-from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, AddressSerializer, OrderSerializer
-from users.models import User, Address, Order
+from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, AddressSerializer, OrderSerializer, ProfileSerializer
+from users.models import User, Address, Order, Profile
 from django.http import JsonResponse
 import requests
 from django.contrib import messages
@@ -196,3 +196,8 @@ class GetGoogleAccessView(APIView):
         }, status=status.HTTP_200_OK)
         
         return res
+
+class ProfileView(generics.RetrieveUpdateAPIView):
+
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
