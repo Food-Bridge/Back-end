@@ -3,10 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import exceptions
 from rest_framework.renderers import JSONRenderer
-from django.shortcuts import redirect
-from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.authentication import CSRFCheck
@@ -14,10 +11,10 @@ from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSer
 from users.models import User, Address, Order
 from django.http import JsonResponse
 import requests
-from django.contrib import messages
-from json.decoder import JSONDecodeError
 from urllib.parse import urlparse
-from django.conf import settings
+from rest_framework import permissions
+from rest_framework import authentication
+
 
 from allauth.socialaccount.models import SocialAccount
 from dj_rest_auth.registration.views import SocialLoginView
@@ -30,7 +27,7 @@ from allauth.socialaccount.providers.kakao import views as kakao_view
 ##### XSS로부터 안전하지만 CSRF문제가 발생 → CSRF 부분 보완
 class RegisterAPIView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [permissions.AllowAny]
     def post(self, request, *args, **kwargs):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
@@ -67,7 +64,8 @@ class RegisterAPIView(generics.GenericAPIView):
 
 class LoginAPIView(generics.GenericAPIView):
     serializer_class = LoginSerializer
-    
+    permission_classes = [permissions.AllowAny]
+
     def post(self,request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -75,6 +73,8 @@ class LoginAPIView(generics.GenericAPIView):
 
 class LogoutAPIView(generics.GenericAPIView):
     serializer_class = LogoutSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
