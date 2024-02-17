@@ -31,12 +31,16 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
 ##### GET 요청(전체 게시글 조회) 시리얼라이저
 class PostListSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
+    weight_value = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Blog
         fields = "__all__"
 
     def get_likes_count(self, obj):
         return obj.like_users.count()
+
+    def get_weight_value(self, obj):
+        return obj.WeightMethod()
 
 ##### GET/PUT/DELETE 요청(상세 보기 조회, 수정, 삭제) 시리얼라이저
 class PostDetailSerializer(serializers.ModelSerializer):

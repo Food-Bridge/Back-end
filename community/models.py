@@ -13,9 +13,13 @@ class Blog(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    views = models.IntegerField(default=0)  ##### 조회 수 필드
+    views = models.IntegerField(default=0)
 
+    ##### views : 조회 수 / like_users : 좋아요 누른 사람의 수 / comment_count : 게시물에 달린 댓글의 수
     ##### 인기글 선정 기준 : 댓글 수 + 조회 수 + 게시글 좋아요 수(like_users의 길이 값)
+    def WeightMethod(self):
+        return self.views + self.like_users.count() + self.comment_set.count()    
+    
     def get_api_url(self):
         try:
             return reverse("posts_api:post_detail", kwargs={"pk":self.pk})
@@ -24,6 +28,9 @@ class Blog(models.Model):
 
     def get_comment_count(self, obj):
         return obj.get_comment_count()  # 댓글 수를 가져오는 메서드 호출
+    
+    def get_likes_count(self, obj):
+        return obj.like_users.count()
 
 ##### 댓글 모델
 ##### 게시글 삭제 시 -> 댓글도 자동 삭제
