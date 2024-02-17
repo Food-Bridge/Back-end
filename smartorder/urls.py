@@ -28,4 +28,7 @@ urlpatterns = [
 
     ##### 쿠폰 페이지
     path('coupon/', include('coupon.api.urls')),
+    
+    ##### 검색
+    path('search/', include('search.api.urls')),
 ]
