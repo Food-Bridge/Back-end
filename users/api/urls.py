@@ -16,7 +16,6 @@ from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAu
 # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 # path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-
 urlpatterns = [
     ##### 로그인, 로그아웃, 회원가입
     path('signup/', RegisterAPIView.as_view(),name="signup"),
@@ -38,4 +37,4 @@ urlpatterns = [
     path('kakao/login/callback/', GetKakaoAccessView.as_view(), name="kakao_callback"),
     # 구글 소셜로그인 콜백(로그인/회원가입)
     path('google/login/callback/', GetGoogleAccessView.as_view(), name='google_callback'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
