@@ -28,4 +28,7 @@ urlpatterns = [
 
     ##### 쿠폰 페이지
     path('coupon/', include('coupon.api.urls')),
+
+    ##### 커뮤니티 페이지
+    path('community/', include('community.api.urls')),
 ]
