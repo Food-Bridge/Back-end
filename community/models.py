@@ -7,21 +7,23 @@ from django.shortcuts import reverse
 ##### 게시물 모델
 class Blog(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    ##### 좋아요 누른 사람들 : N : N 관계
+    ##### 좋아요 누른 사람들 : N : N 관계(리스트 형태)
     like_users = models.ManyToManyField(User, related_name='like_articles')
     title = models.CharField(max_length=50)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     views = models.IntegerField(default=0)  ##### 조회 수 필드
-    comment_count = models.IntegerField(default=0)  ##### 댓글 수 필드
 
-    ##### 인기글 선정 기준 : 댓글 수 + 조회 수 + 게시글 좋아요 수
+    ##### 인기글 선정 기준 : 댓글 수 + 조회 수 + 게시글 좋아요 수(like_users의 길이 값)
     def get_api_url(self):
         try:
             return reverse("posts_api:post_detail", kwargs={"pk":self.pk})
         except:
             None
+
+    def get_comment_count(self, obj):
+        return obj.get_comment_count()  # 댓글 수를 가져오는 메서드 호출
 
 ##### 댓글 모델
 ##### 게시글 삭제 시 -> 댓글도 자동 삭제
@@ -31,4 +33,7 @@ class Comment(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    comment_likes = models.IntegerField(default=0)
+    comment = models.IntegerField(default=0)
+
+    def get_comment_count(self):
+        return self.comment.count()  # 해당 게시물의 댓글 수 반환

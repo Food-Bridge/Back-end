@@ -37,11 +37,13 @@ class PostListSerializer(serializers.ModelSerializer):
 
     def get_likes_count(self, obj):
         return obj.like_users.count()
-    
+
 ##### GET/PUT/DELETE 요청(상세 보기 조회, 수정, 삭제) 시리얼라이저
 class PostDetailSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
     pk = serializers.SerializerMethodField(read_only=True)
+    like_users = serializers.SerializerMethodField(read_only=True)
+    comment_count = serializers.SerializerMethodField(read_only=True)  # SerializerMethodField로 변경
     author = UserInfoSerializer(read_only=True) ##### 현재 유저 정보 파악
 
     class Meta:
@@ -51,10 +53,17 @@ class PostDetailSerializer(serializers.ModelSerializer):
     ##### 작성한 게시물의 번호 파라미터 -> pk
     def get_pk(self, obj):
         return obj.pk
-    
+
     def get_likes_count(self, obj):
         return obj.like_users.count()
     
+    def get_like_users(self, obj):
+        like_users = obj.like_users.all()
+        return UserInfoSerializer(like_users, many=True).data
+
+    def get_comment_count(self, obj):
+        return obj.comment_set.count()  # 해당 게시물의 댓글 수 반환
+
 ##### GET 요청(특정 게시물에 대한 모든 댓글 조회) 시리얼라이저
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,15 +85,15 @@ class CommentCreateUpdateSerializer(serializers.ModelSerializer):
 ##### 좋아요 시리얼라이저
 class PostLikeSerializer(serializers.ModelSerializer):
     email = serializers.SerializerMethodField()
-    likes = serializers.StringRelatedField(many=True)
     likes_count = serializers.SerializerMethodField()
+    like_users = serializers.SerializerMethodField(read_only=True)
 
     def get_email(self, obj):
         return obj.author.email
     
     def get_likes_count(self, obj):
-        return obj.likes_count()
+        return obj.like_users.count()
 
     class Meta:
         model = Blog
-        fields = ('id', 'email', 'likes', 'likes_count',)
+        fields = ('id', 'email', 'like_users', 'likes_count',)
