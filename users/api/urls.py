@@ -1,7 +1,5 @@
 from django.urls import path, include
 from django.contrib import admin
-from django.conf import settings
-from django.conf.urls.static import static
 from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAuthenticatiedUserView, UserAddressAPIView, UserOrderAPIView, GetKakaoAccessView, GetGoogleAccessView, ProfileView
 # Access Token, Refresh Token 
 # Logic1. 요청을 보내자마자 액세스 토큰 형식으로 응답을 받고 새로고침된다.

@@ -136,8 +136,8 @@ class Profile(models.Model):
     # primary_key를 User의 pk로 설정하여 통합 관리
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     nickname = models.CharField(max_length=20)
-    image = ResizedImageField(size=[500,500], upload_to="profile/resize/", null=True, blank=True)
-    image_original = models.ImageField(upload_to='profile/', default='default.png')
+    image = ResizedImageField(size=[500,500], upload_to="profile/resize/%Y/%m/%d" , null=True, blank=True)
+    image_original = models.ImageField(upload_to='profile/%Y/%m/%d', default='default.png')
     
 
     @receiver(post_save, sender=User)
