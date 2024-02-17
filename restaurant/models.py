@@ -52,10 +52,10 @@ class Restaurant(models.Model):
     )
     subCategory = models.ForeignKey(
         SubCategory,
-        on_delete=models.SET_DEFAULT,
+        on_delete=models.SET_NULL,
         related_name='subCategory',
         blank=True,
-        default=None,
+        null=True,
     )
 
     def __str__(self):
