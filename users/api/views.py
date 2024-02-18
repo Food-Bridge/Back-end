@@ -201,3 +201,25 @@ class ProfileView(generics.RetrieveUpdateAPIView):
 
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
+    
+    def get_object(self):
+        # JWT 토큰에서 사용자 ID를 가져옴
+        user_id = self.request.user.id
+        # 해당 사용자 ID에 해당하는 프로필을 가져옴
+        profile = Profile.objects.get(user_id=user_id)
+        return profile
+
+    def get(self, request, *args, **kwargs):
+        # GET 요청을 처리하여 사용자의 프로필을 반환
+        profile = self.get_object()
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        # PUT 요청을 처리하여 사용자의 프로필을 업데이트
+        profile = self.get_object()
+        serializer = self.get_serializer(profile, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -11,6 +11,7 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from users.api.utils import generate_access_token, decode_access_token
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
+from django.conf import settings
 import phonenumbers
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -133,7 +134,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['nickname', 'image']
+        fields = ['user_id', 'nickname', 'image']
         
     def create(self, validated_data):
         instance = Profile.objects.create(**validated_data)
@@ -146,3 +147,10 @@ class ProfileSerializer(serializers.ModelSerializer):
             elif ext in ['gif','webp']:
                 Profile.objects.create(article=instance, image_original=image_data)
         return instance
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # 이미지가 없는 경우에는 image_original 값을 반환
+        if not ret['image']:
+            ret['image'] = self.context['request'].build_absolute_uri(settings.MEDIA_URL + str(instance.image_original))
+        return ret

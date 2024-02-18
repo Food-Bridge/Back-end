@@ -27,7 +27,7 @@ urlpatterns = [
     path('<int:user_id>/orders/', UserOrderAPIView.as_view(), name="orders"),
     
     ##### 회원 프로파일
-    path('profile/<int:pk>/', ProfileView.as_view(), name="profile"),
+    path('profile/', ProfileView.as_view(), name="profile"),
 
     path('authonly/', OnlyAuthenticatiedUserView.as_view(), name="authonly"),
     
