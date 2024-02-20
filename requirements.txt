@@ -12,6 +12,7 @@ django-apscheduler==0.6.2
 django-cors-headers==4.3.1
 django-filter==23.5
 django-phonenumber-field==7.3.0
+django-resized==1.0.2
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.3.1
 drf-yasg==1.21.7
