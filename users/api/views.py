@@ -93,7 +93,7 @@ class OnlyAuthenticatiedUserView(APIView):
             return Response({"error" : "접근 권한이 없다."}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({"message" : "Accepted"})
     
-class UserAddressAPIView(generics.ListAPIView):
+class UserAddressAPIView(generics.ListCreateAPIView):
     serializer_class = AddressSerializer
 
     def get_queryset(self):
@@ -118,14 +118,7 @@ class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         user_id = self.request.user.id
         return Address.objects.filter(user_id=user_id)
 
-class UserOrderAPIView(generics.ListAPIView):
-    serializer_class = OrderSerializer
-
-    def get_queryset(self):
-        user_id = self.request.user.id
-        return Order.objects.filter(user_id=user_id)
-    
-class UserOrderDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+class UserOrderAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
 
     def get_queryset(self):
