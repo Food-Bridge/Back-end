@@ -7,7 +7,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.authentication import CSRFCheck
-from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, AddressSerializer, OrderSerializer, ProfileSerializer
+from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, OrderSerializer, ProfileSerializer
 from users.models import User, Address, Order, Profile
 from django.http import JsonResponse
 import requests
