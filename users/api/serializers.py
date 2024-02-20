@@ -12,7 +12,6 @@ from users.api.utils import generate_access_token, decode_access_token
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
 import phonenumbers
-from django.contrib.auth import get_user_model
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=3, required=True)
@@ -111,34 +110,21 @@ class LogoutSerializer(serializers.Serializer):
     def save(self):
         RefreshToken(self.token).blacklist()
 
-class AddressSerializer(serializers.ModelSerializer):
-    # token = serializers.SerializerMethodField()
-    # user_id = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Address
-        fields = "__all__"
-
-    def get_token(self, obj):
-        user_token, created = Token.objects.get_or_create(user=obj.user)
-        return user_token.key
-
-    def get_user_id(self, obj):
-        return obj.user_id
-
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = "__all__"
 
+##### 전체 사용자 정보를 조회(주소 정보 처리 확인 차원)
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    # address = AddressSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'password', 'username')
+        fields = ('email', 'username',)
 
-class UserInfoSerializer(serializers.ModelSerializer):
+class UserAddressSerializer(serializers.ModelSerializer):
+
     class Meta:
-        model = User
-        fields = ('id', 'email', 'username')
+        model = Address
+        fields = ("user", "zonecode", "roadAddress", "buildingName", "sigungu", "is_default", "latitude", "longitude",)
