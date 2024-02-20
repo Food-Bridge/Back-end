@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     ##### site
     'django.contrib.sites',
+    'drf_yasg',
 
     ##### dj_rest_auth
     'dj_rest_auth',
@@ -169,10 +170,6 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT를 통한 인증방식 사용
     ),
 }
-
-##### MEDIA 부분
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 REST_USE_JWT = True
 
