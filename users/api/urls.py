@@ -1,5 +1,6 @@
-from django.urls import path
-from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAuthenticatiedUserView, UserAddressAPIView, UserOrderAPIView, GetKakaoAccessView, GetGoogleAccessView
+from django.urls import path, include
+from django.contrib import admin
+from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAuthenticatiedUserView, UserAddressAPIView, UserOrderAPIView, GetKakaoAccessView, GetGoogleAccessView, ProfileView
 # Access Token, Refresh Token 
 # Logic1. 요청을 보내자마자 액세스 토큰 형식으로 응답을 받고 새로고침된다.
 # Logic2. 액세스 토큰의 한계 : 기본적으로 5분 동안만 지속된다는 문제가 발생 → 5분이 지나면 자동 폐기
@@ -13,7 +14,6 @@ from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAu
 # path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
 # path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-
 urlpatterns = [
     ##### 로그인, 로그아웃, 회원가입
     path('signup/', RegisterAPIView.as_view(),name="signup"),
@@ -25,6 +25,9 @@ urlpatterns = [
     
     ##### 회원별 주문 내역
     path('<int:user_id>/orders/', UserOrderAPIView.as_view(), name="orders"),
+    
+    ##### 회원 프로파일
+    path('profile/', ProfileView.as_view(), name="profile"),
 
     path('authonly/', OnlyAuthenticatiedUserView.as_view(), name="authonly"),
     
