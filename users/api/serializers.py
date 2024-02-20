@@ -111,22 +111,21 @@ class LogoutSerializer(serializers.Serializer):
     def save(self):
         RefreshToken(self.token).blacklist()
 
-class AddressSerializer(serializers.ModelSerializer):
-    # token = serializers.SerializerMethodField()
-    # user_id = serializers.SerializerMethodField()
-
+class OrderSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Address
+        model = Order
         fields = "__all__"
 
-    def get_token(self, obj):
-        user_token, created = Token.objects.get_or_create(user=obj.user)
-        return user_token.key
+##### 전체 사용자 정보를 조회(주소 정보 처리 확인 차원)
+class UserSerializer(serializers.ModelSerializer):
+    # address = AddressSerializer(many=True, read_only=True)
 
-    def get_user_id(self, obj):
-        return obj.user_id
+    class Meta:
+        model = User
+        fields = ('email', 'username',)
 
-class OrderSerializer(serializers.ModelSerializer):
+class UserAddressSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Order
         fields = "__all__"
@@ -154,3 +153,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         if not ret['image']:
             ret['image'] = self.context['request'].build_absolute_uri(settings.MEDIA_URL + str(instance.image_original))
         return ret
+
+        model = Address
+        fields = ("user", "zonecode", "roadAddress", "buildingName", "sigungu", "is_default", "latitude", "longitude",)

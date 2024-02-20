@@ -19,7 +19,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     
@@ -31,6 +30,8 @@ urlpatterns = [
 
     ##### 쿠폰 페이지
     path('coupon/', include('coupon.api.urls')),
-]
 
+    ##### 커뮤니티 페이지
+    path('community/', include('community.api.urls')),
+] 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

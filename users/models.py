@@ -10,6 +10,8 @@ from restaurant.models import Restaurant
 from django_resized import ResizedImageField
 import requests
 
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 state = getattr(settings, "KAKAO_REST_API_KEY") 
 
 class CustomUserManager(BaseUserManager):
@@ -74,20 +76,17 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
-##### 위도, 경도는 미반영
-##### 사용자의 거주지를 등록하여 조회가 가능한지에 먼저 포커싱
 class Address(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    detail_address = models.CharField(max_length=255, verbose_name='address')
-    building_name = models.CharField(max_length=255, null=True)
-    road_address = models.CharField(max_length=255, blank=True, null=True)
-    jibun_address = models.CharField(max_length=255, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="address")
+    zonecode = models.IntegerField(null=True)
+    roadAddress = models.CharField(max_length=255, blank=True, null=True)
+    buildingName = models.CharField(max_length=255, blank=True, null=True)
+    sigungu = models.CharField(max_length=255, blank=True, null=True)
     is_default = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
+    latitude = models.FloatField(validators=[MinValueValidator(-90), MaxValueValidator(90)])
+    longitude = models.FloatField(validators=[MinValueValidator(-180), MaxValueValidator(180)])
 
+    #### try ~ except(raise 예외 처리)
     def save(self, *args, **kwargs):
         api_key = getattr(settings, "KAKAO_REST_API_KEY") 
         if not self.latitude and not self.longitude:
@@ -116,7 +115,6 @@ class Address(models.Model):
                     self.road_address = road_address_info.get('address_name', None)
                     self.jibun_address = jibun_address_info.get('address_name', None)
         super().save(*args, **kwargs)
-
 
 # Create your models here.
 class Order(models.Model):

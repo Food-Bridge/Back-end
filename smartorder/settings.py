@@ -14,6 +14,8 @@ from datetime import timedelta
 import os
 import json
 import sys
+# import django
+# django.setup()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,7 +85,14 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.auth0',
     'allauth.socialaccount.providers.kakao',
     'allauth.socialaccount.providers.google',
+
+    ##### django-apscheduler
+    'django_apscheduler',
 ]
+
+##### django-apscheduler
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"  # Default
+SCHEDULER_DEFAULT = True
 
 ##### allauth
 SITE_ID = 1
@@ -150,10 +159,21 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'users.USER'
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',  # 인증된 요청인지 확인
+        'rest_framework.permissions.IsAdminUser',  # 관리자만 접근 가능
+        'rest_framework.permissions.AllowAny',  # 누구나 접근 가능
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT를 통한 인증방식 사용
     ),
 }
+
+##### MEDIA 부분
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+REST_USE_JWT = True
 
 ##### https://pypi.org/project/django-cors-headers/
 ##### A list of HTTP verbs that are allowed for the actual request. Defaults to:
@@ -256,7 +276,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
@@ -266,8 +285,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-REST_USE_JWT = True
 
 ##### 회원 전화번호와 관련된 세팅
 PHONENUMBER_DEFAULT_FORMAT = 'NATIONAL' # Serializer Field 설정(Defulat=E164)
