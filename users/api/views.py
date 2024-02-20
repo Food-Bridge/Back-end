@@ -97,7 +97,7 @@ class UserAddressAPIView(generics.ListAPIView):
     serializer_class = AddressSerializer
 
     def get_queryset(self):
-        user_id = self.kwargs['user_id']
+        user_id = self.request.user.id
         return Address.objects.filter(user_id=user_id)
     
     def KaKaoAPIView(address):
@@ -111,11 +111,25 @@ class UserAddressAPIView(generics.ListAPIView):
         crd = {"lat": str(lat), "lng": str(lng)}
         return JsonResponse(crd, status=201)
 
+class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AddressSerializer
+    
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return Address.objects.filter(user_id=user_id)
+
 class UserOrderAPIView(generics.ListAPIView):
     serializer_class = OrderSerializer
 
     def get_queryset(self):
-        user_id = self.kwargs['user_id']
+        user_id = self.request.user.id
+        return Order.objects.filter(user_id=user_id)
+    
+class UserOrderDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        user_id = self.request.user.id
         return Order.objects.filter(user_id=user_id)
 
 ##### 카카오 로그인창을 띄우고, 사용자가 카카오 계정으로 로그인을 하면 인증 코드를 받아오는 함수
