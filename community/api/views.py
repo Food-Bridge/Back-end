@@ -1,4 +1,11 @@
 from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.core.serializers import serialize
+from django.conf import settings
+import datetime
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import F, Count
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -16,14 +23,10 @@ from community.api.serializers import (PostCreateUpdateSerializer,
                                        PostDetailSerializer, 
                                        CommentSerializer, 
                                        CommentCreateUpdateSerializer,
-                                       PostLikeSerializer)
+                                       PostLikeSerializer,
+                                       PopularPostSerializer)
 from community.api.pagination import PostLimitOffsetPagination
 from community.api.mixins import MutlipleFieldMixin
-
-##### 주간 인기글/일간 인기글 구현을 위한 정기적인 함수 실행 라이브러리
-from apscheduler.schedulers.background import BackgroundScheduler
-
-sched = BackgroundScheduler()
 
 class ListPostAPIView(generics.ListAPIView):
     """
@@ -52,7 +55,7 @@ class CreatePostAPIView(APIView):
     def post(self, request, *args, **kwargs):
         user_id = request.user.id
         request.data['author'] = user_id
-        serializer = PostCreateUpdateSerializer(data=request.data)
+        serializer = PostCreateUpdateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid(raise_exception=True):
             serializer.save(author_id=user_id)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -83,7 +86,6 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
         instance.views += 1
         instance.save()
         return super().retrieve(request, *args, **kwargs)
-
 
 class ListCommentAPIView(APIView):
     """
@@ -154,3 +156,25 @@ class LikeAPIView(APIView):
             post.like_users.add(request.user)
             post.save()
             return Response("like", status=status.HTTP_200_OK)
+        
+##### 일간 인기글 갱신
+class DailyPopularPostsAPIView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, format=None):
+        now = timezone.now()
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        ##### 
+        sorted_posts = Blog.objects.filter(created_at__range=(today_start, today_end)).annotate(
+            weight=F('views') + Count('like_users') + Count('comments')).order_by('-weight')
+        serializer = PopularPostSerializer(sorted_posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+##### 최신순 글 정렬
+class LatestPostsAPIView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, *args, **kwargs):
+        latest_posts = Blog.objects.all().order_by('-created_at')[:5]
+        serializer = PostListSerializer(latest_posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

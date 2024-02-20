@@ -11,14 +11,15 @@ class Blog(models.Model):
     like_users = models.ManyToManyField(User, related_name='like_articles')
     title = models.CharField(max_length=50)
     content = models.TextField()
+    image = models.ImageField(upload_to="community/%Y/%m/%d")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     views = models.IntegerField(default=0)
 
-    ##### views : 조회 수 / like_users : 좋아요 누른 사람의 수 / comment_count : 게시물에 달린 댓글의 수
+    ##### views : 조회 수 / like_users : 좋아요 누른 사람의 수 / comments_count : 게시물에 달린 댓글의 수
     ##### 인기글 선정 기준 : 댓글 수 + 조회 수 + 게시글 좋아요 수(like_users의 길이 값)
     def WeightMethod(self):
-        return self.views + self.like_users.count() + self.comment_set.count()    
+        return self.views + self.like_users.count() + self.comments.count()    
     
     def get_api_url(self):
         try:
@@ -35,7 +36,7 @@ class Blog(models.Model):
 ##### 댓글 모델
 ##### 게시글 삭제 시 -> 댓글도 자동 삭제
 class Comment(models.Model):
-    post = models.ForeignKey(Blog, on_delete=models.CASCADE)
+    post = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='comment')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -43,4 +44,4 @@ class Comment(models.Model):
     comment = models.IntegerField(default=0)
 
     def get_comment_count(self):
-        return self.comment.count()  # 해당 게시물의 댓글 수 반환
+        return Comment.objects.filter(post=self.post).count()

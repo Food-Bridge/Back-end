@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from ..models import Blog, Comment
 from users.models import User
+from django.conf import settings
 
 ##### 사용자 정보 시리얼라이저
 class UserInfoSerializer(serializers.ModelSerializer):
@@ -14,8 +15,9 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Blog
-        fields = ('author', 'title', 'content', 'created_at', 'updated_at')
+        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'image',)
 
+        
     ##### 검증
     def validate_title(self, value):
         if len(value) == 0:
@@ -49,10 +51,11 @@ class PostDetailSerializer(serializers.ModelSerializer):
     like_users = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)  # SerializerMethodField로 변경
     author = UserInfoSerializer(read_only=True) ##### 현재 유저 정보 파악
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Blog
-        fields = ('pk', 'author', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count',)
+        fields = ('pk', 'author', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'image')
     
     ##### 작성한 게시물의 번호 파라미터 -> pk
     def get_pk(self, obj):
@@ -66,7 +69,12 @@ class PostDetailSerializer(serializers.ModelSerializer):
         return UserInfoSerializer(like_users, many=True).data
 
     def get_comment_count(self, obj):
-        return obj.comment_set.count()  # 해당 게시물의 댓글 수 반환
+        return obj.comment.count()  # 해당 게시물의 댓글 수 반환
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.image.url)
+
 
 ##### GET 요청(특정 게시물에 대한 모든 댓글 조회) 시리얼라이저
 class CommentSerializer(serializers.ModelSerializer):
@@ -101,3 +109,9 @@ class PostLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Blog
         fields = ('id', 'email', 'like_users', 'likes_count',)
+
+##### 인기 게시글 시리얼라이저
+class PopularPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Blog
+        fields = "__all__"
