@@ -113,7 +113,11 @@ class Address(models.Model):
                     self.road_address = road_address_info.get('address_name', None)
                     self.jibun_address = jibun_address_info.get('address_name', None)
         super().save(*args, **kwargs)
-
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user'], condition=models.Q(is_default=True), name='Default address unique')
+        ]
 
 # Create your models here.
 class Order(models.Model):
