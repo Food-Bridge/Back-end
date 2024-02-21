@@ -13,7 +13,7 @@ from django.http import JsonResponse
 import requests
 from django.conf import settings
 from rest_framework import permissions
-from users.api.serializers import UserSerializer, UserAddressSerializer
+from users.api.serializers import UserSerializer, UserAddressSerializer, SocialLoginSerializer
 
 from allauth.socialaccount.models import SocialAccount
 # from dj_rest_auth.registration.views import SocialLoginView
@@ -135,13 +135,24 @@ class UserOrderAPIView(generics.ListAPIView):
         return Order.objects.filter(user_id=user_id)
 
 class GetKakaoAccessView(APIView):
+    serializer_class = SocialLoginSerializer
+    permission_classes = [permissions.AllowAny]
+    
     def post(self, request, *args, **kwargs):
-        kakao_access_token = request.data.get("access_token")
+        serializer = SocialLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            kakao_access_token = serializer.validated_data.get("access_token")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         ##### Profile request
         profile_request = requests.get(
             "https://kapi.kakao.com/v2/user/me", headers={"Authorization": f"Bearer {kakao_access_token}"})
         profile_json = profile_request.json()
         kakao_account = profile_json.get('kakao_account')
+        
+        if kakao_account is None:
+            return Response("err_msg : failed to get email", status=status.HTTP_400_BAD_REQUEST)
+        
         ##### Email
         email = kakao_account.get('email')
         try:
@@ -175,8 +186,15 @@ class GetKakaoAccessView(APIView):
         return res
     
 class GetGoogleAccessView(APIView):
+    serializer_class = SocialLoginSerializer
+    permission_classes = [permissions.AllowAny]
+    
     def post(self, request, *args, **kwargs):
-        google_access_token = request.data.get("access_token")
+        serializer = SocialLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            google_access_token = serializer.validated_data.get("access_token")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         email_req = requests.get(f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={google_access_token}")
         email_req_status = email_req.status_code
         

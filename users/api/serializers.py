@@ -130,6 +130,9 @@ class UserAddressSerializer(serializers.ModelSerializer):
         model = Order
         fields = "__all__"
 
+class SocialLoginSerializer(serializers.Serializer):
+    access_token = serializers.CharField(max_length=100)
+
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
