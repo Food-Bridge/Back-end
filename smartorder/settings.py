@@ -64,7 +64,6 @@ INSTALLED_APPS = [
 
     ##### app_name
     'cart',
-    'category',
     'community',
     'coupon',
     'like',
