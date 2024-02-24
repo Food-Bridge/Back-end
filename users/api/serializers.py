@@ -131,7 +131,7 @@ class UserAddressSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SocialLoginSerializer(serializers.Serializer):
-    access_token = serializers.CharField(max_length=100)
+    access_token = serializers.CharField()
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -156,6 +156,3 @@ class ProfileSerializer(serializers.ModelSerializer):
         if not ret['image']:
             ret['image'] = self.context['request'].build_absolute_uri(settings.MEDIA_URL + str(instance.image_original))
         return ret
-
-        model = Address
-        fields = ("user", "zonecode", "roadAddress", "buildingName", "sigungu", "is_default", "latitude", "longitude",)
