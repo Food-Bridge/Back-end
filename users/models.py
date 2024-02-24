@@ -43,7 +43,7 @@ class User(AbstractBaseUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     phone_number_regex = RegexValidator(regex=r'^01[016789]?-?\d{3,4}-?\d{4}$')
-    phone_number= models.CharField(validators = [phone_number_regex], max_length =13, unique=True)
+    phone_number= models.CharField(validators = [phone_number_regex], max_length =13, unique=False)
     is_seller   = models.BooleanField(
         verbose_name='판매자 여부',
         default=False
