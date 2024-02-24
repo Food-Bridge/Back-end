@@ -14,8 +14,6 @@ from datetime import timedelta
 import os
 import json
 import sys
-# import django
-# django.setup()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -291,3 +289,18 @@ PHONENUMBER_DB_FORMAT = 'NATIONAL' # Model Field 설정(Defulat=E164)
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'BearerAuth': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': "JWT Token"
+        }
+    },
+    'SECURITY_REQUIREMENTS': [{
+        'BearerAuth': []
+    }]
+}
