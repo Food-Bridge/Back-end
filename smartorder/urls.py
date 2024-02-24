@@ -51,6 +51,9 @@ urlpatterns = [
 
     ##### 커뮤니티 페이지
     path('community/', include('community.api.urls')),
+
+    ##### 찜 목록 페이지
+    path('like/', include('like.api.urls')),
 ] 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
