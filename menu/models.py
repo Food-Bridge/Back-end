@@ -7,7 +7,7 @@ class Menu(models.Model):
     name = models.CharField(max_length=100)
     price = models.PositiveIntegerField()
     rating = models.FloatField()
-    image = models.ImageField(upload_to='menu/')
+    image = models.ImageField(upload_to='restaurant_image/menu/%Y/%m/%d', blank=True, null=True)
     is_main = models.BooleanField(default=False)
     is_popular = models.BooleanField(default=False)
 
