@@ -40,8 +40,9 @@ urlpatterns = [
     ##### 메인 페이지
     path('users/', include('users.api.urls')),
 
-    ##### 가게 페이지
+    ##### 가게/가게 메뉴 페이지
     path('restaurant/', include('restaurant.api.urls')),
+    path('restaurant/<int:res_id>/menu/', include('menu.api.urls')),
 
     ##### 쿠폰 페이지
     path('coupon/', include('coupon.api.urls')),
