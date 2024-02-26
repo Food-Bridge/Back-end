@@ -71,14 +71,15 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
-##### 위도, 경도는 미반영
-##### 사용자의 거주지를 등록하여 조회가 가능한지에 먼저 포커싱
+
 class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     detail_address = models.CharField(max_length=255, verbose_name='address')
+    nickname = models.CharField(max_length=255, null=True, blank=True)
     building_name = models.CharField(max_length=255, null=True)
     road_address = models.CharField(max_length=255, blank=True, null=True)
     jibun_address = models.CharField(max_length=255, blank=True, null=True)
+    sigungu = models.CharField(max_length=255, blank=True, null=True)
     is_default = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -86,7 +87,10 @@ class Address(models.Model):
     longitude = models.FloatField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
-        api_key = getattr(settings, "KAKAO_REST_API_KEY") 
+        api_key = getattr(settings, "KAKAO_REST_API_KEY")
+        if not self.nickname:
+            self.nickname = f"{self.road_address} {self.building_name}"
+
         if not self.latitude and not self.longitude:
             address_to_geocode = f"{self.detail_address}"
             response = requests.get(f"https://dapi.kakao.com/v2/local/search/address.json?query={address_to_geocode}",

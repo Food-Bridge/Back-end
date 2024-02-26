@@ -15,6 +15,7 @@ from users.models import User, Address, Order
 from django.http import JsonResponse
 import requests
 from django.contrib import messages
+from rest_framework import permissions
 from json.decoder import JSONDecodeError
 from urllib.parse import urlparse
 from django.conf import settings
@@ -95,16 +96,17 @@ class OnlyAuthenticatiedUserView(APIView):
     
 class UserAddressAPIView(generics.ListCreateAPIView):
     serializer_class = AddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user_id = self.request.user.id
         return Address.objects.filter(user_id=user_id)
     
     def KaKaoAPIView(address):
-        address = "서울시 강남구 도곡동"    
+        KAKAO_REST_API_KEY = getattr(settings, 'KAKAO_REST_API_KEY')
     
         url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
-        results = requests.get(urlparse(url).geturl(), headers={"Authorization" : "KakaoAK 3086e0fa06801c242f3f6d1ca5ab6bef"}).json()
+        results = requests.get(urlparse(url).geturl(), headers={"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"}).json()
 
         lat = results["documents"][0]["x"]
         lng = results["documents"][0]["y"]
@@ -113,10 +115,15 @@ class UserAddressAPIView(generics.ListCreateAPIView):
 
 class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
         user_id = self.request.user.id
         return Address.objects.filter(user_id=user_id)
+    
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        instance.save()
 
 class UserOrderAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer

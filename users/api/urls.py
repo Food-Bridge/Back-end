@@ -1,6 +1,6 @@
 from django.urls import path
 from users.api.views import RegisterAPIView, LoginAPIView, LogoutAPIView, OnlyAuthenticatiedUserView, GetKakaoAccessView, GetGoogleAccessView
-from users.api.views import UserOrderAPIView, UserOrderDetailAPIView
+# from users.api.views import UserOrderAPIView, UserOrderDetailAPIView
 from users.api.views import UserAddressAPIView, UserAddressDetailAPIView
 
 # Access Token, Refresh Token 
@@ -27,9 +27,9 @@ urlpatterns = [
     path('address/', UserAddressAPIView.as_view(), name="address"),
     path('address/<int:pk>/', UserAddressDetailAPIView.as_view(), name="addressDetail"),
     
-    ##### 회원별 주문 내역
-    path('orders/', UserOrderAPIView.as_view(), name="orders"),
-    path('orders/<int:pk>/', UserOrderDetailAPIView.as_view(), name="orderDetail"),
+    ##### 회원별 주문 내역 - 미정
+    ## path('orders/', UserOrderAPIView.as_view(), name="orders"),
+    ## path('orders/<int:pk>/', UserOrderDetailAPIView.as_view(), name="orderDetail"),
 
     path('authonly/', OnlyAuthenticatiedUserView.as_view(), name="authonly"),
     
