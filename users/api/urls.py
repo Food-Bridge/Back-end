@@ -29,6 +29,10 @@ urlpatterns = [
     path('signup/', RegisterAPIView.as_view(),name="signup"),
     path('login/', LoginAPIView.as_view(),name="login"),
     path('logout/', LogoutAPIView.as_view(), name="logout"),
+    
+    ##### 토큰 가져오기/리프레시 토큰으로 갱신하기
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     ##### 회원별 주소
     path('<int:user_id>/address/', UserAddressAPIView.as_view(), name="address"),
