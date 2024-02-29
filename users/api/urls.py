@@ -35,13 +35,12 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     ##### 회원별 주소
-    path('<int:user_id>/address/', UserAddressAPIView.as_view(), name="address"),
+    path('address/', UserAddressAPIView.as_view(), name="address"),
+    path('address/<int:pk>/', UserAddressDetailAPIView.as_view(), name="addressDetail"),
     
-    ##### 회원별 주문 내역
-    path('<int:user_id>/orders/', UserOrderAPIView.as_view(), name="orders"),
-    
-    ##### 회원 프로파일
-    path('profile/', ProfileView.as_view(), name="profile"),
+    ##### 회원별 주문 내역 - 미정
+    ## path('orders/', UserOrderAPIView.as_view(), name="orders"),
+    ## path('orders/<int:pk>/', UserOrderDetailAPIView.as_view(), name="orderDetail"),
 
     path('authonly/', OnlyAuthenticatiedUserView.as_view(), name="authonly"),
     

@@ -110,10 +110,11 @@ class LogoutSerializer(serializers.Serializer):
     def save(self):
         RefreshToken(self.token).blacklist()
 
-class OrderSerializer(serializers.ModelSerializer):
+class AddressSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.id")
     class Meta:
-        model = Order
-        fields = "__all__"
+        model = Address
+        fields = ['user', 'id', 'nickname', 'detail_address', 'road_address', 'jibun_address', 'building_name', 'sigungu', 'is_default' ]
 
 ##### 전체 사용자 정보를 조회(주소 정보 처리 확인 차원)
 class UserSerializer(serializers.ModelSerializer):

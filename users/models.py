@@ -76,11 +76,14 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+
 class Address(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="address")
-    zonecode = models.IntegerField(null=True)
-    roadAddress = models.CharField(max_length=255, blank=True, null=True)
-    buildingName = models.CharField(max_length=255, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    detail_address = models.CharField(max_length=255, verbose_name='address')
+    nickname = models.CharField(max_length=255, null=True, blank=True)
+    building_name = models.CharField(max_length=255, null=True)
+    road_address = models.CharField(max_length=255, blank=True, null=True)
+    jibun_address = models.CharField(max_length=255, blank=True, null=True)
     sigungu = models.CharField(max_length=255, blank=True, null=True)
     is_default = models.BooleanField(default=False)
     latitude = models.FloatField(validators=[MinValueValidator(-90), MaxValueValidator(90)])
@@ -88,7 +91,10 @@ class Address(models.Model):
 
     #### try ~ except(raise 예외 처리)
     def save(self, *args, **kwargs):
-        api_key = getattr(settings, "KAKAO_REST_API_KEY") 
+        api_key = getattr(settings, "KAKAO_REST_API_KEY")
+        if not self.nickname:
+            self.nickname = f"{self.road_address} {self.building_name}"
+
         if not self.latitude and not self.longitude:
             address_to_geocode = f"{self.detail_address}"
             response = requests.get(f"https://dapi.kakao.com/v2/local/search/address.json?query={address_to_geocode}",
@@ -115,6 +121,11 @@ class Address(models.Model):
                     self.road_address = road_address_info.get('address_name', None)
                     self.jibun_address = jibun_address_info.get('address_name', None)
         super().save(*args, **kwargs)
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user'], condition=models.Q(is_default=True), name='Default address unique')
+        ]
 
 # Create your models here.
 class Order(models.Model):
