@@ -55,6 +55,9 @@ urlpatterns = [
 
     ##### 찜 목록 페이지
     path('like/', include('like.api.urls')),
+    
+    ##### 장바구니
+    path('cart/', include('cart.api.urls')),
 ] 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
