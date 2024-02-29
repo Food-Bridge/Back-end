@@ -1,8 +1,6 @@
 import requests
-from rest_framework import generics, status, permissions
+from rest_framework import generics, status, permissions, exceptions
 from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import exceptions
 from rest_framework.renderers import JSONRenderer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -13,8 +11,15 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from urllib.parse import urlparse
-from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, ProfileSerializer
-from users.api.serializers import UserSerializer, AddressSerializer, SocialLoginSerializer
+from users.api.serializers import (
+    RegisterSerializer,
+    LoginSerializer,
+    LogoutSerializer,
+    ProfileSerializer,
+    UserSerializer,
+    AddressSerializer,
+    SocialLoginSerializer
+    )
 from allauth.socialaccount.models import SocialAccount
 
 class RegisterAPIView(generics.GenericAPIView):
