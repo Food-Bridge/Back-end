@@ -1,10 +1,25 @@
 from rest_framework import serializers
-from restaurant.models import Restaurant
+from restaurant.models import Restaurant, MainCategory, SubCategory
+
+class MainCategorySerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = MainCategory
+        fields = "__all__"
+        
+class SubCategorySerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = SubCategory
+        fields = "__all__"
 
 class RestaurantSerializer(serializers.ModelSerializer):
     minDeliveryTimeMinutes = serializers.SerializerMethodField()
     maxDeliveryTimeMinutes = serializers.SerializerMethodField()
-
+    
+    mainCategory_name = serializers.SerializerMethodField()
+    subCategory_name = serializers.SerializerMethodField()
+    
     def validate_minDeliveryTimeMinutes(self, minDeliveryTimeMinutes):
         if minDeliveryTimeMinutes < 0:
             raise serializers.ValidationError('최소 배달 예상 시간이 음수가 나올 수 없습니다.')
@@ -27,6 +42,16 @@ class RestaurantSerializer(serializers.ModelSerializer):
             return maxDeliveryTimeMinutes
         return None
 
+    def get_mainCategory_name(self, obj):
+        if obj.mainCategory:
+            return obj.mainCategory.name
+        return None
+
+    def get_subCategory_name(self, obj):
+        if obj.subCategory:
+            return obj.subCategory.name
+        return None
+    
     class Meta:
         model = Restaurant
         exclude = ('minDeliveryTime', 'maxDeliveryTime')

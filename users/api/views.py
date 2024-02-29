@@ -1,44 +1,30 @@
-from rest_framework import generics, status
+import requests
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import exceptions
 from rest_framework.renderers import JSONRenderer
-from django.shortcuts import redirect
-from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.authentication import CSRFCheck
-from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, AddressSerializer, OrderSerializer
-from users.models import User, Address, Order
+from users.models import User, Address, Order, Profile
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-import requests
-from django.contrib import messages
-from rest_framework import permissions
-from json.decoder import JSONDecodeError
-from urllib.parse import urlparse
 from django.conf import settings
-
+from urllib.parse import urlparse
+from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, OrderSerializer, ProfileSerializer
+from users.api.serializers import UserSerializer, UserAddressSerializer, SocialLoginSerializer
 from allauth.socialaccount.models import SocialAccount
-from dj_rest_auth.registration.views import SocialLoginView
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from allauth.socialaccount.providers.kakao import views as kakao_view
 
-# Create your views here.
-##### 시리얼라이저를 사용해서 유저를 저장하고(=회원가입), JWT토큰을 발급받아 쿠키에 저장한다.
-##### 쿠키에 저장할 떄, `httpOnly=True` 속성을 지정 → Javascript로부터 쿠키를 조회할 수 없도록
-##### XSS로부터 안전하지만 CSRF문제가 발생 → CSRF 부분 보완
 class RegisterAPIView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [permissions.AllowAny]
     def post(self, request, *args, **kwargs):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
         
-            ##### JWT 토큰 접근
             token = TokenObtainPairSerializer.get_token(user)
             refresh_token = str(token)
             access_token = str(token.access_token)
@@ -54,7 +40,6 @@ class RegisterAPIView(generics.GenericAPIView):
                 status = status.HTTP_200_OK,
             )
 
-            ##### JWT 토큰 쿠키에 저장
             res.set_cookie("access", access_token, httponly=True)
             res.set_cookie("refresh", refresh_token, httponly=True)
             return res
@@ -69,7 +54,8 @@ class RegisterAPIView(generics.GenericAPIView):
 
 class LoginAPIView(generics.GenericAPIView):
     serializer_class = LoginSerializer
-    
+    permission_classes = [permissions.AllowAny]
+
     def post(self,request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -77,6 +63,7 @@ class LoginAPIView(generics.GenericAPIView):
 
 class LogoutAPIView(generics.GenericAPIView):
     serializer_class = LogoutSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -115,10 +102,6 @@ class UserAddressAPIView(generics.ListCreateAPIView):
         url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
         results = requests.get(urlparse(url).geturl(), headers={"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"}).json()
 
-        lat = results["documents"][0]["x"]
-        lng = results["documents"][0]["y"]
-        crd = {"lat": str(lat), "lng": str(lng)}
-        return JsonResponse(crd, status=201)
 
 class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressSerializer
@@ -160,17 +143,25 @@ class UserOrderAPIView(generics.RetrieveUpdateDestroyAPIView):
         user_id = self.request.user.id
         return Order.objects.filter(user_id=user_id)
 
-##### 카카오 로그인창을 띄우고, 사용자가 카카오 계정으로 로그인을 하면 인증 코드를 받아오는 함수
-##### 토큰 받기
-##### 토큰을 기반으로 사용자 로그인 처리
 class GetKakaoAccessView(APIView):
+    serializer_class = SocialLoginSerializer
+    permission_classes = [permissions.AllowAny]
+    
     def post(self, request, *args, **kwargs):
-        kakao_access_token = request.data.get("access_token")
+        serializer = SocialLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            kakao_access_token = serializer.validated_data.get("access_token")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         ##### Profile request
         profile_request = requests.get(
             "https://kapi.kakao.com/v2/user/me", headers={"Authorization": f"Bearer {kakao_access_token}"})
         profile_json = profile_request.json()
         kakao_account = profile_json.get('kakao_account')
+        
+        if kakao_account is None:
+            return Response("err_msg : failed to get email", status=status.HTTP_400_BAD_REQUEST)
+        
         ##### Email
         email = kakao_account.get('email')
         try:
@@ -204,8 +195,15 @@ class GetKakaoAccessView(APIView):
         return res
     
 class GetGoogleAccessView(APIView):
+    serializer_class = SocialLoginSerializer
+    permission_classes = [permissions.AllowAny]
+    
     def post(self, request, *args, **kwargs):
-        google_access_token = request.data.get("access_token")
+        serializer = SocialLoginSerializer(data=request.data)
+        if serializer.is_valid():
+            google_access_token = serializer.validated_data.get("access_token")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         email_req = requests.get(f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={google_access_token}")
         email_req_status = email_req.status_code
         
@@ -238,3 +236,41 @@ class GetGoogleAccessView(APIView):
         }, status=status.HTTP_200_OK)
         
         return res
+
+class ProfileView(generics.RetrieveUpdateAPIView):
+
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+    
+    def get_object(self):
+        # JWT 토큰에서 사용자 ID를 가져옴
+        user_id = self.request.user.id
+        # 해당 사용자 ID에 해당하는 프로필을 가져옴
+        profile = Profile.objects.get(user_id=user_id)
+        return profile
+
+    def get(self, request, *args, **kwargs):
+        # GET 요청을 처리하여 사용자의 프로필을 반환
+        profile = self.get_object()
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
+
+    def put(self, request, *args, **kwargs):
+        # PUT 요청을 처리하여 사용자의 프로필을 업데이트
+        profile = self.get_object()
+        serializer = self.get_serializer(profile, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserInfoAPIView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    """
+    get:
+        Returns a list of all existing posts
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]

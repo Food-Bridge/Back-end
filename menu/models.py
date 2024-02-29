@@ -1,10 +1,8 @@
 from django.db import models
 from restaurant.models import Restaurant
-from category.models import Category
 from django.core.validators import MaxValueValidator
 
 class Menu(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     price = models.PositiveIntegerField()

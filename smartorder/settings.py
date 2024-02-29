@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     ##### site
     'django.contrib.sites',
+    'drf_yasg',
 
     ##### dj_rest_auth
     'dj_rest_auth',
@@ -63,7 +64,6 @@ INSTALLED_APPS = [
 
     ##### app_name
     'cart',
-    'category',
     'community',
     'coupon',
     'like',
@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     'users',
     'users_coupon',
     'review',
+    'search',
 
     ##### ModelField
     'phonenumber_field',
@@ -83,7 +84,14 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.auth0',
     'allauth.socialaccount.providers.kakao',
     'allauth.socialaccount.providers.google',
+
+    ##### django-apscheduler
+    'django_apscheduler',
 ]
+
+##### django-apscheduler
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"  # Default
+SCHEDULER_DEFAULT = True
 
 ##### allauth
 SITE_ID = 1
@@ -118,7 +126,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': False,
+    'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': False,
 
@@ -150,10 +158,17 @@ SIMPLE_JWT = {
 AUTH_USER_MODEL = 'users.USER'
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',  # 인증된 요청인지 확인
+        'rest_framework.permissions.IsAdminUser',  # 관리자만 접근 가능
+        'rest_framework.permissions.AllowAny',  # 누구나 접근 가능
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT를 통한 인증방식 사용
     ),
 }
+
+REST_USE_JWT = True
 
 ##### https://pypi.org/project/django-cors-headers/
 ##### A list of HTTP verbs that are allowed for the actual request. Defaults to:
@@ -256,7 +271,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
@@ -267,8 +281,25 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REST_USE_JWT = True
-
 ##### 회원 전화번호와 관련된 세팅
 PHONENUMBER_DEFAULT_FORMAT = 'NATIONAL' # Serializer Field 설정(Defulat=E164)
 PHONENUMBER_DB_FORMAT = 'NATIONAL' # Model Field 설정(Defulat=E164)
+
+STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,
+    'SECURITY_DEFINITIONS': {
+        'BearerAuth': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': "JWT Token"
+        }
+    },
+    'SECURITY_REQUIREMENTS': [{
+        'BearerAuth': []
+    }]
+}

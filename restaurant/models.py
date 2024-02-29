@@ -1,9 +1,29 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.validators import MinValueValidator, MaxValueValidator
-import datetime
 
-# Create your models here.
+class MainCategory(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        verbose_name = "대분류"
+        verbose_name_plural = "대분류"
+        
+    def __str__(self):
+        return self.name
+
+class SubCategory(models.Model):
+    name = models.CharField(max_length=50)
+    main_category = models.ForeignKey(MainCategory, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = "중분류"
+        verbose_name_plural = "중분류"
+        
+    def __str__(self):
+        return self.name
+
+
 class Restaurant(models.Model):
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
@@ -23,6 +43,20 @@ class Restaurant(models.Model):
     start = models.IntegerField(default=0)
     end = models.IntegerField(default=0)
     operatingTime = models.CharField(max_length=255)
+    mainCategory = models.ForeignKey(
+        MainCategory,
+        on_delete=models.SET_DEFAULT,
+        related_name='mainCategory',
+        blank=True,
+        default=None,
+    )
+    subCategory = models.ForeignKey(
+        SubCategory,
+        on_delete=models.SET_NULL,
+        related_name='subCategory',
+        blank=True,
+        null=True,
+    )
 
     def __str__(self):
         return self.name

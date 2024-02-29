@@ -1,16 +1,21 @@
 from rest_framework import serializers
-from rest_framework_simplejwt.settings import api_settings
-from users.models import User, Address, Order
-from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from phonenumber_field.modelfields import PhoneNumberField
-from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
-from users.api.utils import generate_access_token, decode_access_token
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
+
+from django.contrib import auth
+from django.conf import settings
+
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.validators import UnicodeUsernameValidator
+
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken, TokenError
+
+from users.api.utils import generate_access_token, decode_access_token
+from users.models import User, Address, Order, Profile
+
+from phonenumber_field.modelfields import PhoneNumberField
 import phonenumbers
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -41,14 +46,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         if password != password2:
             raise serializers.ValidationError({"password":"Password and Confirm Password Does not match"})
         
-        ##### filter(체이닝)
-        ##### username(사용자 이름이 동일한 경우 → 동명이인)
-        ##### 같은 이름인데 같은 이메일이 아닌 것들을 필터링
-        user = User.objects.filter(username=username).exclude(email=email).first()
-        if user:
-            if user.email == email:
-                raise serializers.ValidationError({"username": "This username is already taken with the same email."})
-
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"message": "This username is already taken with the same email."})    
+        
         if not username.isalnum():
             raise serializers.ValidationError(self.default_error_messages)
         return attrs
@@ -85,9 +85,9 @@ class LoginSerializer(serializers.ModelSerializer):
         password = attrs.get('password', '')
         user = authenticate(email=email, password=password)  # authenticate에서 email 사용
         if not user:
-            raise AuthenticationFailed('Invalid credentials, try again')
+            raise AuthenticationFailed({'message' : 'User does not exist. try again'})
         if not user.is_active:
-            raise AuthenticationFailed('Account disabled, contact admin')
+            raise AuthenticationFailed({'message' : 'Account disabled, contact admin'})
         return {
             'email': user.email,
             'username': user.username,
@@ -100,7 +100,7 @@ class LogoutSerializer(serializers.Serializer):
         self.token = attrs.get('refresh')
         
         if not self.token:
-            raise ValidationError({'message' : "유효한 토큰이 아닙니다."})
+            raise ValidationError({'message' : "Token value is empty."})
         try:
             refresh_token = RefreshToken(self.token)
             refresh_token.verify()
@@ -116,14 +116,43 @@ class AddressSerializer(serializers.ModelSerializer):
         model = Address
         fields = ['user', 'id', 'nickname', 'detail_address', 'road_address', 'jibun_address', 'building_name', 'sigungu', 'is_default' ]
 
-    def get_token(self, obj):
-        user_token, created = Token.objects.get_or_create(user=obj.user)
-        return user_token.key
+##### 전체 사용자 정보를 조회(주소 정보 처리 확인 차원)
+class UserSerializer(serializers.ModelSerializer):
+    # address = AddressSerializer(many=True, read_only=True)
 
-    def get_user_id(self, obj):
-        return obj.user_id
+    class Meta:
+        model = User
+        fields = ('email', 'username',)
 
-class OrderSerializer(serializers.ModelSerializer):
+class UserAddressSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Order
         fields = "__all__"
+
+class SocialLoginSerializer(serializers.Serializer):
+    access_token = serializers.CharField()
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['user_id', 'nickname', 'image']
+        
+    def create(self, validated_data):
+        instance = Profile.objects.create(**validated_data)
+        image_set = self.context['request'].FILES
+        for image_data in image_set.getlist('image'):
+            ext = str(image_data).split('.')[-1] # ext에 확장자 명이 담긴다.
+            ext = ext.lower() # 확장자를 소문자로 통일
+            if ext in ['jpg', 'jpeg','png',]:
+                Profile.objects.create(article=instance, image=image_data, image_original=image_data)
+            elif ext in ['gif','webp']:
+                Profile.objects.create(article=instance, image_original=image_data)
+        return instance
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # 이미지가 없는 경우에는 image_original 값을 반환
+        if not ret['image']:
+            ret['image'] = self.context['request'].build_absolute_uri(settings.MEDIA_URL + str(instance.image_original))
+        return ret

@@ -1,11 +1,16 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.core.validators import RegexValidator
 from rest_framework_simplejwt.tokens import RefreshToken
 from coupon.models import Coupon
 from restaurant.models import Restaurant
+from django_resized import ResizedImageField
 import requests
+
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 state = getattr(settings, "KAKAO_REST_API_KEY") 
 
@@ -38,7 +43,7 @@ class User(AbstractBaseUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     phone_number_regex = RegexValidator(regex=r'^01[016789]?-?\d{3,4}-?\d{4}$')
-    phone_number= models.CharField(validators = [phone_number_regex], max_length =13, unique=True)
+    phone_number= models.CharField(validators = [phone_number_regex], max_length =13, unique=False)
     is_seller   = models.BooleanField(
         verbose_name='판매자 여부',
         default=False
@@ -81,11 +86,10 @@ class Address(models.Model):
     jibun_address = models.CharField(max_length=255, blank=True, null=True)
     sigungu = models.CharField(max_length=255, blank=True, null=True)
     is_default = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
+    latitude = models.FloatField(validators=[MinValueValidator(-90), MaxValueValidator(90)])
+    longitude = models.FloatField(validators=[MinValueValidator(-180), MaxValueValidator(180)])
 
+    #### try ~ except(raise 예외 처리)
     def save(self, *args, **kwargs):
         api_key = getattr(settings, "KAKAO_REST_API_KEY")
         if not self.nickname:
@@ -136,3 +140,16 @@ class Order(models.Model):
     paymentMethod = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
     totalPrice = models.IntegerField()
     status = models.BooleanField(default=False)
+
+class Profile(models.Model):
+    # primary_key를 User의 pk로 설정하여 통합 관리
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    nickname = models.CharField(max_length=20)
+    image = ResizedImageField(size=[500,500], upload_to="profile/resize/%Y/%m/%d" , null=True, blank=True)
+    image_original = models.ImageField(upload_to='profile/%Y/%m/%d', default='default.png')
+    
+
+    @receiver(post_save, sender=User)
+    def create_user_profile(sender, instance, created, **kwargs):
+        if created:
+            Profile.objects.create(user=instance)

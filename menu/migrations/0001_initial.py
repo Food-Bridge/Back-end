@@ -9,7 +9,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('category', '0001_initial'),
         ('restaurant', '0004_alter_restaurant_maxdeliverytime_and_more'),
     ]
 
@@ -24,7 +23,6 @@ class Migration(migrations.Migration):
                 ('image', models.ImageField(upload_to='Menu/')),
                 ('is_main', models.BooleanField(default=False)),
                 ('is_popular', models.BooleanField(default=False)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='category.category')),
                 ('restaurant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='restaurant.restaurant')),
             ],
         ),

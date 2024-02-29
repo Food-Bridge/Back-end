@@ -15,7 +15,24 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.conf import settings
+from django.conf.urls.static import static
+
+# 문서화 drf_yasg
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="스마트오더 API",
+        default_version='v1',
+        description="백엔드 API",
+    ),
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,4 +45,22 @@ urlpatterns = [
 
     ##### 쿠폰 페이지
     path('coupon/', include('coupon.api.urls')),
-]
+    
+    ##### 검색
+    path('search/', include('search.api.urls')),
+
+    ##### 커뮤니티 페이지
+    path('community/', include('community.api.urls')),
+
+    ##### 찜 목록 페이지
+    path('like/', include('like.api.urls')),
+] 
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+if settings.DEBUG:
+    urlpatterns += [
+        re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+        re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+        re_path(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc')
+    ]
