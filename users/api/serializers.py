@@ -46,14 +46,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         if password != password2:
             raise serializers.ValidationError({"password":"Password and Confirm Password Does not match"})
         
-        ##### filter(체이닝)
-        ##### username(사용자 이름이 동일한 경우 → 동명이인)
-        ##### 같은 이름인데 같은 이메일이 아닌 것들을 필터링
-        user = User.objects.filter(username=username).exclude(email=email).first()
-        if user:
-            if user.email == email:
-                raise serializers.ValidationError({"username": "This username is already taken with the same email."})
-
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"message": "This username is already taken with the same email."})    
+        
         if not username.isalnum():
             raise serializers.ValidationError(self.default_error_messages)
         return attrs
@@ -90,9 +85,9 @@ class LoginSerializer(serializers.ModelSerializer):
         password = attrs.get('password', '')
         user = authenticate(email=email, password=password)  # authenticate에서 email 사용
         if not user:
-            raise AuthenticationFailed('Invalid credentials, try again')
+            raise AuthenticationFailed({'message' : 'User does not exist. try again'})
         if not user.is_active:
-            raise AuthenticationFailed('Account disabled, contact admin')
+            raise AuthenticationFailed({'message' : 'Account disabled, contact admin'})
         return {
             'email': user.email,
             'username': user.username,
@@ -105,7 +100,7 @@ class LogoutSerializer(serializers.Serializer):
         self.token = attrs.get('refresh')
         
         if not self.token:
-            raise ValidationError({'message' : "유효한 토큰이 아닙니다."})
+            raise ValidationError({'message' : "Token value is empty."})
         try:
             refresh_token = RefreshToken(self.token)
             refresh_token.verify()
