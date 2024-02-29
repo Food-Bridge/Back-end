@@ -13,8 +13,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from urllib.parse import urlparse
-from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, OrderSerializer, ProfileSerializer
-from users.api.serializers import UserSerializer, UserAddressSerializer, SocialLoginSerializer
+from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, ProfileSerializer
+from users.api.serializers import UserSerializer, AddressSerializer, SocialLoginSerializer
 from allauth.socialaccount.models import SocialAccount
 
 class RegisterAPIView(generics.GenericAPIView):
@@ -136,12 +136,12 @@ class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return Response({'is_default': instance.is_default}, status=status.HTTP_200_OK)
 
 
-class UserOrderAPIView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = OrderSerializer
+# class UserOrderAPIView(generics.RetrieveUpdateDestroyAPIView):
+#     serializer_class = OrderSerializer
 
-    def get_queryset(self):
-        user_id = self.request.user.id
-        return Order.objects.filter(user_id=user_id)
+#     def get_queryset(self):
+#         user_id = self.request.user.id
+#         return Order.objects.filter(user_id=user_id)
 
 class GetKakaoAccessView(APIView):
     serializer_class = SocialLoginSerializer

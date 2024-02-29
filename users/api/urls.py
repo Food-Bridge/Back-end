@@ -5,7 +5,8 @@ from users.api.views import (
     LogoutAPIView,
     OnlyAuthenticatiedUserView,
     UserAddressAPIView,
-    UserOrderAPIView,
+    UserAddressDetailAPIView,
+    # UserOrderAPIView,
     GetKakaoAccessView,
     GetGoogleAccessView,
     ProfileView
