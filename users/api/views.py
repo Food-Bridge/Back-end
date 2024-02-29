@@ -13,6 +13,7 @@ from rest_framework.authentication import CSRFCheck
 from users.api.serializers import RegisterSerializer, LoginSerializer, LogoutSerializer, AddressSerializer, OrderSerializer
 from users.models import User, Address, Order
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 import requests
 from django.contrib import messages
 from rest_framework import permissions
@@ -102,6 +103,12 @@ class UserAddressAPIView(generics.ListCreateAPIView):
         user_id = self.request.user.id
         return Address.objects.filter(user_id=user_id)
     
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user_id=request.user.id)  # 사용자 ID 추가
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
     def KaKaoAPIView(address):
         KAKAO_REST_API_KEY = getattr(settings, 'KAKAO_REST_API_KEY')
     
@@ -121,27 +128,27 @@ class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         user_id = self.request.user.id
         obj_id = self.kwargs.get('pk')
         queryset = Address.objects.filter(user_id=user_id, id=obj_id)
-        if queryset.exists():  
-            return queryset.first()  
+        return get_object_or_404(queryset)
     
     ##### update 메서드 오버라이딩
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         
-        ##### 특정 주소 객체 인스턴스
-        instance = self.get_object()
+        user_id = self.request.user.id  # 사용자의 ID를 가져옴
+        obj_id = self.kwargs.get('pk')  # 주소 객체의 ID를 가져옴
+        
+        queryset = Address.objects.filter(user_id=user_id, id=obj_id)  # 해당 사용자의 주소 중에서 가져옴
+        instance = get_object_or_404(queryset)
+        
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
-        ##### 해당 인스턴스의 is_default = True -> False
         if instance.is_default:
             instance.is_default = False
-        ##### 해당 인스턴스의 is_default = False -> True
         else:
             instance.is_default = True
-        ##### 인스턴스 상태를 저장
+
         instance.save()
-        ##### DB에 업데이트하여 저장
         self.perform_update(serializer)
         return Response({'is_default': instance.is_default}, status=status.HTTP_200_OK)
 
