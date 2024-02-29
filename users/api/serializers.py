@@ -111,9 +111,10 @@ class LogoutSerializer(serializers.Serializer):
         RefreshToken(self.token).blacklist()
 
 class AddressSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.id")
     class Meta:
         model = Address
-        fields = ['detail_address', 'road_address', 'jibun_address', 'building_name', 'sigungu' ]
+        fields = ['user', 'id', 'nickname', 'detail_address', 'road_address', 'jibun_address', 'building_name', 'sigungu', 'is_default' ]
 
     def get_token(self, obj):
         user_token, created = Token.objects.get_or_create(user=obj.user)
