@@ -117,13 +117,34 @@ class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressSerializer
     permission_classes = [permissions.IsAuthenticated]
     
-    def get_queryset(self):
+    def get_object(self):
         user_id = self.request.user.id
-        return Address.objects.filter(user_id=user_id)
+        obj_id = self.kwargs.get('pk')
+        queryset = Address.objects.filter(user_id=user_id, id=obj_id)
+        if queryset.exists():  
+            return queryset.first()  
     
-    def perform_update(self, serializer):
-        instance = serializer.save()
+    ##### update 메서드 오버라이딩
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        
+        ##### 특정 주소 객체 인스턴스
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        ##### 해당 인스턴스의 is_default = True -> False
+        if instance.is_default:
+            instance.is_default = False
+        ##### 해당 인스턴스의 is_default = False -> True
+        else:
+            instance.is_default = True
+        ##### 인스턴스 상태를 저장
         instance.save()
+        ##### DB에 업데이트하여 저장
+        self.perform_update(serializer)
+        return Response({'is_default': instance.is_default}, status=status.HTTP_200_OK)
+
 
 class UserOrderAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
