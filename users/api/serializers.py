@@ -1,17 +1,21 @@
 from rest_framework import serializers
-from rest_framework_simplejwt.settings import api_settings
-from users.models import User, Address, Order, Profile
-from django.contrib import auth
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.tokens import RefreshToken, TokenError
-from phonenumber_field.modelfields import PhoneNumberField
-from django.contrib.auth import authenticate, get_user_model
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
-from users.api.utils import generate_access_token, decode_access_token
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
+
+from django.contrib import auth
 from django.conf import settings
+
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.validators import UnicodeUsernameValidator
+
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken, TokenError
+
+from users.api.utils import generate_access_token, decode_access_token
+from users.models import User, Address, Order, Profile
+
+from phonenumber_field.modelfields import PhoneNumberField
 import phonenumbers
 
 class RegisterSerializer(serializers.ModelSerializer):
