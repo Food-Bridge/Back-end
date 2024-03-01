@@ -1,21 +1,13 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
 from restaurant.api.serializers import RestaurantSerializer
 from restaurant.models import Restaurant
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework import permissions
+from rest_framework import permissions, generics
 
-# Create your views here.
-class RestaurantAPIView(APIView):
+class RestaurantAPIView(generics.ListCreateAPIView):
     permission_classes = [permissions.AllowAny]
-    def get(self, request, *args, **kwargs):
-        restaurant = Restaurant.objects.all()
-        serializer = RestaurantSerializer(restaurant, many=True)
-        return Response(serializer.data)
-    def post(self, request, *args, **kwargs):
-        serializer = RestaurantSerializer(data=request.data)
-        if serializer.is_valid(): 
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer_class = RestaurantSerializer
+    queryset = Restaurant.objects.all()
+
+class RestaurantDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RestaurantSerializer
+    queryset = Restaurant.objects.all()

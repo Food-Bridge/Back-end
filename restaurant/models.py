@@ -29,13 +29,13 @@ class Restaurant(models.Model):
     address = models.CharField(max_length=255)
     phone_number_regex = RegexValidator(regex=r'^02?-?\d{3,4}-?\d{4}$')
     phone_number= models.CharField(validators = [phone_number_regex], max_length =13, unique=True)
-    image = models.ImageField(upload_to='restaurant_image', blank=True, null=True)
+    image = models.ImageField(default='default_restaurant.png', upload_to='restaurant_image/%Y/%m/%d', blank=True, null=True)
     description = models.CharField(max_length=255, blank=True)
     minimumOrderPrice = models.IntegerField()
     minDeliveryTime = models.TimeField(null=True)
     maxDeliveryTime = models.TimeField(null=True)
     orderCount = models.IntegerField(default=0)
-    reviewCouunt = models.IntegerField(default=0)
+    reviewCount = models.IntegerField(default=0)
     bookmarkCount = models.IntegerField(default=0)
     rating = models.FloatField(validators=[MinValueValidator(0, 5), MaxValueValidator(5.0)])
     packaging = models.BooleanField(default=False)
@@ -43,6 +43,7 @@ class Restaurant(models.Model):
     start = models.IntegerField(default=0)
     end = models.IntegerField(default=0)
     operatingTime = models.CharField(max_length=255)
+    delivertyFee = models.PositiveIntegerField(default=0)
     mainCategory = models.ForeignKey(
         MainCategory,
         on_delete=models.SET_DEFAULT,
@@ -57,6 +58,10 @@ class Restaurant(models.Model):
         blank=True,
         null=True,
     )
+    
+    class Meta:
+        verbose_name = "음식점"
+        verbose_name_plural = "음식점"
 
     def __str__(self):
         return self.name
