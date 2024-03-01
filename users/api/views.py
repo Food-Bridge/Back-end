@@ -6,7 +6,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.authentication import CSRFCheck
-from users.models import User, Address, Order, Profile
+from users.models import User, Address, Profile
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.conf import settings
@@ -111,12 +111,13 @@ class UserAddressAPIView(generics.ListCreateAPIView):
 class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Address.objects.all()  # 뷰에서 사용할 쿼리셋을 할당합니다.
     
-    def get_object(self):
+    def get_queryset(self):
         user_id = self.request.user.id
         obj_id = self.kwargs.get('pk')
         queryset = Address.objects.filter(user_id=user_id, id=obj_id)
-        return get_object_or_404(queryset)
+        return queryset
     
     ##### update 메서드 오버라이딩
     def update(self, request, *args, **kwargs):
@@ -139,14 +140,6 @@ class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         instance.save()
         self.perform_update(serializer)
         return Response({'is_default': instance.is_default}, status=status.HTTP_200_OK)
-
-
-# class UserOrderAPIView(generics.RetrieveUpdateDestroyAPIView):
-#     serializer_class = OrderSerializer
-
-#     def get_queryset(self):
-#         user_id = self.request.user.id
-#         return Order.objects.filter(user_id=user_id)
 
 class GetKakaoAccessView(APIView):
     serializer_class = SocialLoginSerializer
@@ -243,7 +236,7 @@ class GetGoogleAccessView(APIView):
         return res
 
 class ProfileView(generics.RetrieveUpdateAPIView):
-
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     
@@ -270,12 +263,10 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class UserInfoAPIView(generics.ListAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
     """
     get:
         Returns a list of all existing posts
     """
-    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = User.objects.all()

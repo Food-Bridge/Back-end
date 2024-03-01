@@ -13,7 +13,7 @@ from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken, TokenError
 
 from users.api.utils import generate_access_token, decode_access_token
-from users.models import User, Address, Order, Profile
+from users.models import User, Address, Profile
 
 from phonenumber_field.modelfields import PhoneNumberField
 import phonenumbers
@@ -123,12 +123,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'username',)
-
-class UserAddressSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Order
-        fields = "__all__"
 
 class SocialLoginSerializer(serializers.Serializer):
     access_token = serializers.CharField()

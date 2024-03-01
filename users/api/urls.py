@@ -6,7 +6,6 @@ from users.api.views import (
     OnlyAuthenticatiedUserView,
     UserAddressAPIView,
     UserAddressDetailAPIView,
-    # UserOrderAPIView,
     GetKakaoAccessView,
     GetGoogleAccessView,
     ProfileView
@@ -39,10 +38,9 @@ urlpatterns = [
     path('address/', UserAddressAPIView.as_view(), name="address"),
     path('address/<int:pk>/', UserAddressDetailAPIView.as_view(), name="addressDetail"),
     
-    ##### 회원별 주문 내역 - 미정
-    ## path('orders/', UserOrderAPIView.as_view(), name="orders"),
-    ## path('orders/<int:pk>/', UserOrderDetailAPIView.as_view(), name="orderDetail"),
-
+    ##### 회원 프로파일
+    path('profile/', ProfileView.as_view(), name="profile"),
+    
     path('authonly/', OnlyAuthenticatiedUserView.as_view(), name="authonly"),
     
     ##### 카카오 소셜 로그인
