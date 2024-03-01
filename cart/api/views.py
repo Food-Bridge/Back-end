@@ -30,9 +30,9 @@ class CartAPIView(generics.RetrieveUpdateDestroyAPIView):
                 "1": 1000,
                 "2": 0,
                 "3": 1500
-            }
-    }
+            },
     "restaurant_id" : 3
+    }
     """
     serializer_class = CartSerializer
     permission_classes = [permissions.AllowAny]
