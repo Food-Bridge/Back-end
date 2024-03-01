@@ -243,7 +243,7 @@ class GetGoogleAccessView(APIView):
         return res
 
 class ProfileView(generics.RetrieveUpdateAPIView):
-
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     
