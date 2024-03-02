@@ -6,4 +6,4 @@ class CartSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = cart
-        fields = ['id', 'user', 'menu_id', 'menu_name', 'menu_price', 'amount', 'total_price', 'option_name', 'option_price', 'restaurant_id']
+        fields = "__all__" #['id', 'user', 'menu_id', 'menu_name', 'menu_price', 'amount', 'total_price', 'option_name', 'option_price', 'restaurant_id']

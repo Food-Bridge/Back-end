@@ -6,32 +6,44 @@ from .serializers import CartSerializer
 
 class CartAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
-    json 전송 예시
-    1. menu_id : 메뉴 번호
-    2. menu_name : 메뉴 이름
-    3. menu_price : 메뉴 가격 (고정)
-    4. amount : 수량 (menu_price 값과 조합)
-    5. option_name : 옵션 이름
-    6. option_price : value 값을 합산하여 total_price에 추가 적용 
+    1. menu_list : 메뉴 리스트
+    2. option_list : 옵션 리스트
+    3. total_price : 최종 금액
+    4. deliveryman_request : 배송시 요청 사항
+    5. paymentMethod : credit_card, cash
+    6. restaurant : 레스토랑 id
     
+    메뉴 2개, 옵션 2개 이상일 경우의 예
+    ```
     {
-    "menu_id": 1001,
-    "menu_name": "간장치킨",
-    "menu_price": 3000,
-    "amount": 2,
-    "option_name":
-            { 
-                "1" : "중간맛",
-                "2" : "치킨무 추가" ,
-                "3" : "소스 추가" 
-            },
-    "option_price":
-            {
-                "1": 1000,
-                "2": 0,
-                "3": 1500
-            },
-    "restaurant_id" : 3
+    "menu_list":
+        {
+            "menu_id: 1,
+            "menu_name" : "양념치킨",
+            "price" : 15000 ,
+            "quantity" : 1 
+        },
+        {
+            "menu_id": 3,
+            "menu" : "간장치킨",
+            "price" : 17000,
+            "quantity" : 1
+        }
+    "option_list":
+        {
+            "option_id": 1,
+            "option_name" : "소스 추가"
+            "price" : 1000 ,
+            "quantity" : 1
+        },
+        {
+            "option_id": 10,
+            "option_name" : "치킨 무 추가"
+            "price" : 0,
+            "quantity" : 1
+        },
+    ...
+    ```
     }
     """
     serializer_class = CartSerializer
