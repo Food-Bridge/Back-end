@@ -7,17 +7,17 @@ from .serializers import CartSerializer
 class CartAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
     json 전송 예시
-    1. food_id : 메뉴 번호
-    2. food_name : 메뉴 이름
-    3. food_price : 메뉴 가격 (고정)
-    4. amount : 수량 (food_price 값과 조합)
+    1. menu_id : 메뉴 번호
+    2. menu_name : 메뉴 이름
+    3. menu_price : 메뉴 가격 (고정)
+    4. amount : 수량 (menu_price 값과 조합)
     5. option_name : 옵션 이름
     6. option_price : value 값을 합산하여 total_price에 추가 적용 
     
     {
-    "food_id": 1001,
-    "food_name": "간장치킨",
-    "food_price": 3000,
+    "menu_id": 1001,
+    "menu_name": "간장치킨",
+    "menu_price": 3000,
     "amount": 2,
     "option_name":
             { 
@@ -40,10 +40,13 @@ class CartAPIView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         user = self.request.user
         if user.is_authenticated:
-            obj, created = cart.objects.get_or_create(user=user)
-            return obj
+            try:
+                obj = cart.objects.get(user=user)
+                return obj
+            except cart.DoesNotExist:
+                return None
         else:
-            return None  # 인증되지 않은 경우에는 None 반환
+            return None
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
@@ -60,4 +63,4 @@ class CartAPIView(generics.RetrieveUpdateDestroyAPIView):
             serializer.save(user=user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response({"detail": "인증이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"message": "인증이 필요합니다."}, status=status.HTTP_401_UNAUTHORIZED)

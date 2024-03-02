@@ -4,9 +4,9 @@ import json
 
 class cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    food_id = models.PositiveIntegerField(null=True)
-    food_name = models.CharField(max_length=100)
-    food_price = models.IntegerField(null=True)
+    menu_id = models.PositiveIntegerField(null=True)
+    menu_name = models.CharField(max_length=100)
+    menu_price = models.IntegerField(null=True)
     amount = models.IntegerField(null=True)
     total_price = models.PositiveIntegerField(default=0)
     option_name = models.JSONField(default=dict, null=True)
@@ -21,9 +21,9 @@ class cart(models.Model):
     
     def calculate_total_price(self):
         option_total_price = sum(self.option_price.values())
-        food_price = self.food_price or 0 # 예외처리
+        menu_price = self.menu_price or 0 # 예외처리
         amount = self.amount or 0 # 예외처리
-        self.total_price = option_total_price + (food_price * amount)
+        self.total_price = option_total_price + (menu_price * amount)
     
     def save(self, *args, **kwargs):
         self.calculate_total_price()  # total_price 계산
