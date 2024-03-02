@@ -37,7 +37,7 @@ class Restaurant(models.Model):
     orderCount = models.IntegerField(default=0)
     reviewCount = models.IntegerField(default=0)
     bookmarkCount = models.IntegerField(default=0)
-    rating = models.FloatField(validators=[MinValueValidator(0, 5), MaxValueValidator(5.0)])
+    rating = models.FloatField(default=0, validators=[MinValueValidator(0, 5), MaxValueValidator(5.0)])
     packaging = models.BooleanField(default=False)
     status = models.BooleanField(default=False)
     start = models.IntegerField(default=0)
