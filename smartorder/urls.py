@@ -54,6 +54,9 @@ urlpatterns = [
 
     ##### 찜 목록 페이지
     path('like/', include('like.api.urls')),
+
+    ##### 유저가 보유하고 있는 쿠폰
+    path('userscoupon/', include('users_coupon.api.urls')),
 ] 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
