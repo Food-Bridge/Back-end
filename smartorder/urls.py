@@ -49,6 +49,9 @@ urlpatterns = [
     
     ##### 검색
     path('search/', include('search.api.urls')),
+    
+    ##### 주문
+    path('order/', include('order.api.urls')),
 
     ##### 커뮤니티 페이지
     path('community/', include('community.api.urls')),

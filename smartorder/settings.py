@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'users_coupon',
     'review',
     'search',
+    'order',
 
     ##### ModelField
     'phonenumber_field',
