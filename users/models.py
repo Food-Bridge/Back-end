@@ -92,6 +92,9 @@ class Address(models.Model):
     #### try ~ except(raise 예외 처리)
     def save(self, *args, **kwargs):
         api_key = getattr(settings, "KAKAO_REST_API_KEY")
+        if not self.building_name:
+            self.building_name = ""
+
         if not self.nickname:
             self.nickname = f"{self.road_address} {self.building_name}"
 
