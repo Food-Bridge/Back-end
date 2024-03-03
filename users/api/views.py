@@ -18,7 +18,6 @@ from users.api.serializers import (
     LoginSerializer,
     LogoutSerializer,
     ProfileSerializer,
-    UserSerializer,
     AddressSerializer,
     SocialLoginSerializer
     )
@@ -272,14 +271,3 @@ class ProfileView(generics.RetrieveUpdateAPIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-class UserInfoAPIView(generics.ListAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    """
-    get:
-        Returns a list of all existing posts
-    """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]

@@ -9,15 +9,14 @@ class UserInfoSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', )
 
-##### POST 요청(게시글 생성) 시리얼라이저
+##### POST 요청(게시글 생성) 시리얼라이저 - 요구사항 반영
 class PostCreateUpdateSerializer(serializers.ModelSerializer):
-    author = UserInfoSerializer(read_only=True) ##### 현재 유저 정보 파악
+    author = serializers.ReadOnlyField(source="author.id")
 
     class Meta:
         model = Blog
         fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'image',)
 
-        
     ##### 검증
     def validate_title(self, value):
         if len(value) == 0:
@@ -29,8 +28,8 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         if len(value) == 0:
             return serializers.ValidationError("내용을 입력하지 않았습니다.")
         return value
-
-##### GET 요청(전체 게시글 조회) 시리얼라이저
+ 
+##### GET 요청(전체 게시글 조회) 시리얼라이저 - 요구사항 반영
 class PostListSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
     weight_value = serializers.SerializerMethodField(read_only=True)
@@ -44,23 +43,18 @@ class PostListSerializer(serializers.ModelSerializer):
     def get_weight_value(self, obj):
         return obj.WeightMethod()
 
-##### GET/PUT/DELETE 요청(상세 보기 조회, 수정, 삭제) 시리얼라이저
+##### GET/PUT/DELETE 요청(상세 보기 조회, 수정, 삭제) 시리얼라이저 - 요구사항 반영
 class PostDetailSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
-    pk = serializers.SerializerMethodField(read_only=True)
     like_users = serializers.SerializerMethodField(read_only=True)
-    comment_count = serializers.SerializerMethodField(read_only=True)  # SerializerMethodField로 변경
-    author = UserInfoSerializer(read_only=True) ##### 현재 유저 정보 파악
+    comment_count = serializers.SerializerMethodField(read_only=True)
     image = serializers.SerializerMethodField()
+    author = serializers.ReadOnlyField(source="author.id")
 
     class Meta:
         model = Blog
-        fields = ('pk', 'author', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'image')
+        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'image', 'id',)
     
-    ##### 작성한 게시물의 번호 파라미터 -> pk
-    def get_pk(self, obj):
-        return obj.pk
-
     def get_likes_count(self, obj):
         return obj.like_users.count()
     
@@ -76,17 +70,22 @@ class PostDetailSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(obj.image.url)
 
 
-##### GET 요청(특정 게시물에 대한 모든 댓글 조회) 시리얼라이저
+##### GET 요청(특정 게시물에 대한 모든 댓글 조회) 시리얼라이저 - 요구사항 반영
 class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = "__all__"
+    author = serializers.ReadOnlyField(source="author.id")
+    post = serializers.ReadOnlyField(source="post.id")
 
-##### POST 요청(댓글 달기) 시리얼라이저
-class CommentCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ("content",)
+        fields = ("author", "post", "content")
+
+##### POST 요청(댓글 달기) 시리얼라이저 
+class CommentCreateUpdateSerializer(serializers.ModelSerializer):
+    post = serializers.ReadOnlyField(source="comment.id")
+
+    class Meta:
+        model = Comment
+        fields = ("content", "post",)
 
 ##### GET/PUT/DELETE 요청(댓글 상세 조회, 수정, 삭제) 시리얼라이저
 class CommentCreateUpdateSerializer(serializers.ModelSerializer):

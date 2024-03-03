@@ -19,7 +19,7 @@ class Blog(models.Model):
     ##### views : 조회 수 / like_users : 좋아요 누른 사람의 수 / comments_count : 게시물에 달린 댓글의 수
     ##### 인기글 선정 기준 : 댓글 수 + 조회 수 + 게시글 좋아요 수(like_users의 길이 값)
     def WeightMethod(self):
-        return self.views + self.like_users.count() + self.comments.count()    
+        return self.views + self.like_users.count() + self.comment.count()    
     
     def get_api_url(self):
         try:
