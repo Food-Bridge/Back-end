@@ -31,6 +31,9 @@ class RegisterAPIView(generics.GenericAPIView):
         if serializer.is_valid():
             user = serializer.save()
 
+            coupon, created = Coupon.objects.get_or_create(code='회원가입 축하 쿠폰')
+            UserCoupon.objects.create(user=user, coupon=coupon)
+
             token = TokenObtainPairSerializer.get_token(user)
             refresh_token = str(token)
             access_token = str(token.access_token)
