@@ -19,12 +19,3 @@ def decode_access_token(access_token):
         raise AuthenticationFailed('Token has expired, please log in again')
     except jwt.InvalidTokenError:
         raise AuthenticationFailed('Invalid token, please log in again')
-
-def register_coupon_to_user(user):
-    register_coupon_ids = [7, 8, 9]
-    for coupon_id in register_coupon_ids:
-        try:
-            coupon = Coupon.objects.get(id=coupon_id)
-            UserCoupon.objects.create(user=user, coupon=coupon)
-        except Coupon.DoesNotExist:
-            pass  # 쿠폰이 존재하지 않는 경우 아무 작업도 수행하지 않음

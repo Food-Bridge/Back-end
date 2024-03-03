@@ -22,7 +22,6 @@ from users.api.serializers import (
     SocialLoginSerializer
     )
 from allauth.socialaccount.models import SocialAccount
-from users.api.utils import register_coupon_to_user
 
 class RegisterAPIView(generics.GenericAPIView):
     serializer_class = RegisterSerializer
@@ -31,8 +30,7 @@ class RegisterAPIView(generics.GenericAPIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            ##### 회원가입시 자동으로 지정된 회원가입 축하 쿠폰 제공
-            register_coupon_to_user(user)
+
             token = TokenObtainPairSerializer.get_token(user)
             refresh_token = str(token)
             access_token = str(token.access_token)
