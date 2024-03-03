@@ -32,6 +32,7 @@ class Restaurant(models.Model):
     image = models.ImageField(default='default_restaurant.png', upload_to='restaurant_image/%Y/%m/%d', blank=True, null=True)
     description = models.CharField(max_length=255, blank=True, verbose_name="매장 설명")
     minimumOrderPrice = models.PositiveIntegerField(default=0, verbose_name="최소 주문 금액")
+    minimumPickupPrice = models.PositiveIntegerField(default=0, verbose_name=" 픽업 최소 주문 금액")
     
     minDeliveryTime = models.PositiveSmallIntegerField(default=0, verbose_name="최소 배달 시간")
     maxDeliveryTime = models.PositiveSmallIntegerField(default=0, verbose_name="최대 배달 시간") 
