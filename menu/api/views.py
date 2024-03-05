@@ -1,9 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from menu.models import Menu, MenuOption
+from menu.models import Menu, MenuOption, MenuSelectedOption
 from restaurant.models import Restaurant
-from menu.api.serializers import MenuSerializer, MenuOptionSerializer
+from menu.api.serializers import MenuSerializer, MenuOptionSerializer, MenuSelectedOptionSerializer
 
 class MenuListCreateAPIView(generics.ListCreateAPIView):
     """
@@ -71,3 +71,38 @@ class MenuOptionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIVi
         get_object_or_404(MenuOption, pk=menu_option_id)
         
         return MenuOption.objects.filter(id=menu_option_id)
+
+class MenuSOptionListCreateAPIView(generics.ListCreateAPIView):
+    """
+    레스토랑 ID와 메뉴 ID 활용하여 옵션 조회, 생성 API
+    """
+    permission_classes = [permissions.AllowAny]
+    serializer_class = MenuSelectedOptionSerializer
+    
+    def get_queryset(self):
+        res_id = self.kwargs.get('res_id')  # URL에서 'res_id' 가져오기
+        menu_id = self.kwargs.get('menu_id') # URL에서 'menu_id' 가져오기
+        
+        get_object_or_404(Restaurant, pk=res_id)
+        get_object_or_404(Menu, pk=menu_id)
+        
+        return MenuSelectedOption.objects.filter(menu_id=menu_id)
+
+class MenuSOptionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    레스토랑 ID와 메뉴 ID, 옵션 ID 활용하여 옵션 조회, 수정, 삭제 API
+    """
+    permission_classes = [permissions.AllowAny]
+    serializer_class = MenuSelectedOptionSerializer
+    lookup_url_kwarg = 'option_id'
+    
+    def get_queryset(self):
+        res_id = self.kwargs.get('res_id')  # URL에서 'res_id' 가져오기
+        menu_id = self.kwargs.get('menu_id') # URL에서 'menu_id' 가져오기
+        menu_option_id = self.kwargs.get('option_id') # URL에서 'option_id' 가져오기
+        
+        get_object_or_404(Restaurant, pk=res_id)
+        get_object_or_404(Menu, pk=menu_id)
+        get_object_or_404(MenuSelectedOption, pk=menu_option_id)
+        
+        return MenuSelectedOption.objects.filter(id=menu_option_id)
