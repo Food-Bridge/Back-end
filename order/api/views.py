@@ -18,30 +18,34 @@ class OrderAPIView(generics.ListCreateAPIView):
     
     메뉴 2개, 옵션 2개 이상일 경우의 예
     ```
-    {
-    "user": 0,
-    "required_options_count": 1,
-    "menu_list": [
+    {"menu_list":[
         {
         "menu_id": 1,
         "menu_name": "양념치킨",
         "price": 15000,
+        "quantity": 1 
+        }
+    ],
+    "option_list":[
+        {
+        "option_id": 1,
+        "option_name": "소스 추가",
+        "price": 1000,
         "quantity": 1
         }
     ],
-    "option_list": [
-            {
-            "option_id": 1,
-            "option_name": "치킨 무",
-            "price": 1000,
-            "quantity": 1
-            }
-        ],
-    "total_price": 3000,
-    "deliveryman_request": "string",
-    "paymentMethod": "credit_card",
-    "order_state": "order_complete",
-    "restaurant": 1
+        "name": "양념 치킨",
+        "price": 15000,
+        "content": null,
+        "image": null,
+        "required_options_count": 1,
+        "is_main": false,
+        "is_popular": false,
+        "restaurant": 1,
+    "order_state" : "order_complete",
+    "paymentMethod" : "cash",
+    "restaurant": 0,
+    }
     }
     ...
     ```

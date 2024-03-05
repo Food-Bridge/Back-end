@@ -12,7 +12,7 @@ class Order(models.Model):
     option_list = models.JSONField(blank=True, null=True) # 옵션
     
     total_price = models.PositiveIntegerField(default=0)  # 주문의 총 가격
-    deliveryman_request = models.TextField(blank=True) # 배송기사 요청
+    deliveryman_request = models.TextField(blank=True, null=True) # 배송기사 요청
     required_options_count = models.PositiveIntegerField(default=1) 
     
     PAYMENT_METHOD_CHOICES = [
