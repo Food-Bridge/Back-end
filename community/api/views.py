@@ -1,5 +1,6 @@
-from django.shortcuts import get_object_or_404
 import datetime
+
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import F, Count
 from django.db import transaction
@@ -75,7 +76,6 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
                 instance.save()
         print(cookies)
         return response
-
 
 class ListCommentAPIView(APIView):
     serializer_class = CommentSerializer
