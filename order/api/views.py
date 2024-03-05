@@ -4,6 +4,7 @@ from restaurant.models import Restaurant
 from menu.models import Menu, MenuOption
 from rest_framework import permissions, generics, status
 from rest_framework.response import Response
+from datetime import datetime
 
 class OrderAPIView(generics.ListCreateAPIView):
     """
@@ -11,40 +12,37 @@ class OrderAPIView(generics.ListCreateAPIView):
     2. option_list : 옵션 리스트
     3. total_price : 최종 금액
     4. deliveryman_request : 배송시 요청 사항
-    5. paymentMethod : credit_card, cash
-    6. restaurant : 레스토랑 id
+    5. required_options_count : 최소 필수 주문 개수
+    6. paymentMethod : credit_card, cash
+    7. restaurant : 레스토랑 id
     
     메뉴 2개, 옵션 2개 이상일 경우의 예
     ```
     {
-    "menu_list":[
+    "user": 0,
+    "required_options_count": 1,
+    "menu_list": [
         {
         "menu_id": 1,
         "menu_name": "양념치킨",
         "price": 15000,
-        "quantity": 1 
-        },
-        {
-        "menu_id": 3,
-        "menu_name": "간장치킨",
-        "price": 17000,
         "quantity": 1
         }
     ],
-    "option_list":[
-        {
-        "option_id": 1,
-        "option_name": "소스 추가",
-        "price": 1000,
-        "quantity": 1
-        },
-        {
-        "option_id": 10,
-        "option_name": "치킨 무 추가",
-        "price": 0,
-        "quantity": 1
-        }
-    ],
+    "option_list": [
+            {
+            "option_id": 1,
+            "option_name": "치킨 무",
+            "price": 1000,
+            "quantity": 1
+            }
+        ],
+    "total_price": 3000,
+    "deliveryman_request": "string",
+    "paymentMethod": "credit_card",
+    "order_state": "order_complete",
+    "restaurant": 1
+    }
     ...
     ```
     }
@@ -57,6 +55,7 @@ class OrderAPIView(generics.ListCreateAPIView):
         restaurant_id = request.data.get('restaurant')
         menu_data = request.data.get('menu_list', [])  # 메뉴 데이터 가져오기
         option_data = request.data.get('option_list', [])  # 옵션 데이터 가져오기
+        required_options_count = request.data.get('required_options_count') # 필수 옵션 개수 가져오기
         
         # 현재 사용자 정보 가져오기
         user = request.user
@@ -71,6 +70,16 @@ class OrderAPIView(generics.ListCreateAPIView):
         menus = []
         options = []
         total_price = 0
+        order_id = datetime.now().strftime("%Y%m%d%H") + "_" + str(user.id)
+        
+        if required_options_count is None:
+            return Response({'error': "필수 주문 값을 받지 못했습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(menu_data) == 0:
+            return Response({'error': "필수 주문 데이터가 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if required_options_count > len(menu_data) :
+            return Response({'error': "필수 주문 데이터가  부족합니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 메뉴 데이터 처리
         for menu_item in menu_data:
@@ -105,7 +114,8 @@ class OrderAPIView(generics.ListCreateAPIView):
             'paymentMethod': request.data.get('paymentMethod'),
             'order_state': request.data.get('order_state'),
             'menu_list' : menu_data,
-            'option_list' : option_data
+            'option_list' : option_data,
+            'order_id' : order_id
         }
         order_serializer = OrderSerializer(data=order_data)
 

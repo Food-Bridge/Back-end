@@ -7,11 +7,13 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
     
+    order_id = models.CharField(blank=True, null=True, max_length=50) # 주문 번호
     menu_list = models.JSONField(blank=True, default=dict) # 메뉴
     option_list = models.JSONField(blank=True, null=True) # 옵션
     
     total_price = models.PositiveIntegerField(default=0)  # 주문의 총 가격
     deliveryman_request = models.TextField(blank=True) # 배송기사 요청
+    required_options_count = models.PositiveIntegerField(default=1) 
     
     PAYMENT_METHOD_CHOICES = [
         ('credit_card', '신용 카드'),
