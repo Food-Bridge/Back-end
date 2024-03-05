@@ -11,6 +11,8 @@ from django.db.models import Count
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
+from datetime import timedelta
+from django.utils import timezone
 
 class RestaurantPagination(PageNumberPagination):
     page_size = 5
@@ -50,9 +52,27 @@ class RestaurantCategorySearchAPI(generics.ListAPIView):
     
     
 class SearchHistoryRankingAPI(generics.ListAPIView):
-    serializer_class = SearchHistorySerializer  # 필요한 경우, SearchHistorySerializer를 적절하게 정의해야 합니다.
+    serializer_class = SearchHistorySerializer
     permission_classes = [AllowAny]
+    
     def get_queryset(self):
-        # 키워드별로 빈도수를 계산하여 순위를 생성하고 상위 10개만 가져옴
-        queryset = SearchHistory.objects.values('keyword').annotate(search_count=Count('id')).order_by('-search_count')[:10]
-        return queryset
+        # 10분 전의 시간 계산
+        one_hour_ago = timezone.now() - timedelta(minutes=60)
+
+        # 10분 전의 검색어 순위를 저장
+        previous_rankings = list(SearchHistory.objects.filter(created_at__gte=one_hour_ago).values('keyword').annotate(search_count=Count('id')).order_by('-search_count')[:10])
+
+        # 현재 검색어 순위 계산
+        current_rankings = list(SearchHistory.objects.values('keyword').annotate(search_count=Count('id')).order_by('-search_count')[:10])
+
+        # 순위 변동 계산
+        for i, keyword_data in enumerate(current_rankings):
+            keyword_data['previous_rank'] = next((index + 1 for index, item in enumerate(previous_rankings) if item['keyword'] == keyword_data['keyword']), None)
+            if keyword_data['previous_rank'] is not None:
+                rank_change = keyword_data['previous_rank'] - (i + 1)
+                keyword_data['rank_change'] = "up" if rank_change > 0 else None if rank_change < 0 else "same"
+            else:
+                keyword_data['rank_change'] = None
+            keyword_data['rank'] = i + 1
+            
+        return current_rankings
