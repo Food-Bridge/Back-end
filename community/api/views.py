@@ -124,24 +124,10 @@ class LikeAPIView(APIView):
             post.save()
             return Response("like", status=status.HTTP_200_OK)
         
-##### 일간 인기글 갱신
-class DailyPopularPostsAPIView(APIView):
-    permission_classes = [AllowAny]
-    def get(self, request, format=None):
-        now = timezone.now()
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
-        
-        ##### 
-        sorted_posts = Blog.objects.filter(created_at__range=(today_start, today_end)).annotate(
-            weight=F('views') + Count('like_users') + Count('comments')).order_by('-weight')
-        serializer = PopularPostSerializer(sorted_posts, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-##### 최신순 글 정렬
 class LatestPostsAPIView(APIView):
+    serializer_class = PostListSerializer
     permission_classes = [AllowAny]
     def get(self, request, *args, **kwargs):
-        latest_posts = Blog.objects.all().order_by('-created_at')[:5]
+        latest_posts = Blog.objects.all().order_by('-created_at')[:10]
         serializer = PostListSerializer(latest_posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
