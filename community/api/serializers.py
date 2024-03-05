@@ -111,6 +111,11 @@ class PostLikeSerializer(serializers.ModelSerializer):
 
 ##### 인기 게시글 시리얼라이저
 class PopularPostSerializer(serializers.ModelSerializer):
+    comment_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Blog
         fields = "__all__"
+
+    def get_comment_count(self, obj):
+        return obj.comment.count()

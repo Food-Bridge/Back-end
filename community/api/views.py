@@ -131,3 +131,21 @@ class LatestPostsAPIView(APIView):
         latest_posts = Blog.objects.all().order_by('-created_at')[:10]
         serializer = PostListSerializer(latest_posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class DailyPopularPostAPIView(APIView):
+    serializer_class = PopularPostSerializer
+    permission_classes = [AllowAny]
+    def get(self, request, *args, **kwargs):
+        start_of_today = timezone.localtime(timezone.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_yesterday = start_of_today - datetime.timedelta(seconds=1)
+
+        start_of_daily = end_of_yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_daily = end_of_yesterday.replace(hour=23, minute=59, second=59, microsecond=0)
+        print(start_of_daily)
+        print(end_of_daily)
+
+        popular_posts = Blog.objects.filter(created_at__range=[start_of_daily, end_of_daily])
+        popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
+        popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:5]
+        serializer = PopularPostSerializer(popular_posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
