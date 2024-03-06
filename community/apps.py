@@ -7,4 +7,5 @@ class CommunityConfig(AppConfig):
 
     def ready(self):
         from community.api import jobs
-        jobs.schedule()
+        jobs.dailyschedule()
+        jobs.weeklyschedule()

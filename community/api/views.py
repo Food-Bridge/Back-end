@@ -146,6 +146,24 @@ class DailyPopularPostAPIView(APIView):
 
         popular_posts = Blog.objects.filter(created_at__range=[start_of_daily, end_of_daily])
         popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
-        popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:5]
+        popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')
+        serializer = PopularPostSerializer(popular_posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class WeekPopularPostAPIView(APIView):
+    serializer_class = PopularPostSerializer
+    permission_classes = [AllowAny]
+    def get(self, request, *args, **kwargs):
+        start_of_week = timezone.localtime(timezone.now()) - datetime.timedelta(days=timezone.localtime(timezone.now()).weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_week = start_of_week + datetime.timedelta(days=6, hours=23, minutes=59, seconds=59)
+
+        if timezone.localtime(timezone.now()).weekday() == 0 and timezone.localtime(timezone.now()).hour == 0 and timezone.localtime(timezone.now()).minute == 0 and timezone.localtime(timezone.now()).second == 0:
+            start_of_week = start_of_week - datetime.timedelta(days=7)
+            end_of_week = end_of_week - datetime.timedelta(days=7)
+
+        popular_posts = Blog.objects.filter(created_at__range=[start_of_week, end_of_week])
+        popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
+        popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')
         serializer = PopularPostSerializer(popular_posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

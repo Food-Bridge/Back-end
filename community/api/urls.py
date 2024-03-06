@@ -8,6 +8,7 @@ from .views import (CreatePostAPIView,
                     LikeAPIView,
                     LatestPostsAPIView,
                     DailyPopularPostAPIView,
+                    WeekPopularPostAPIView,
 )
 urlpatterns = [
     path("", ListPostAPIView.as_view(), name="list_post"),
@@ -19,4 +20,5 @@ urlpatterns = [
     path("<int:pk>/likes/", LikeAPIView.as_view(), name="like"),
     path("latest/", LatestPostsAPIView.as_view(), name="latest_posts"),
     path("daily/", DailyPopularPostAPIView.as_view(), name="daily"),
+    path("weekly/", WeekPopularPostAPIView.as_view(), name="week"),
 ]
