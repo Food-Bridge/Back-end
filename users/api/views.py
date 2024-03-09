@@ -19,7 +19,8 @@ from users.api.serializers import (
     LogoutSerializer,
     ProfileSerializer,
     AddressSerializer,
-    SocialLoginSerializer
+    SocialLoginSerializer,
+    UserSerializer
     )
 from allauth.socialaccount.models import SocialAccount
 
