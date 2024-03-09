@@ -5,6 +5,7 @@ class CommunityConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'community'
 
-    # def ready(self):
-    #     from community.api.operators import start
-    #     start()
+    def ready(self):
+        from community.api import jobs
+        jobs.dailyschedule()
+        jobs.weeklyschedule()

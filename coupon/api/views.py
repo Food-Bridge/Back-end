@@ -1,12 +1,14 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from coupon.models import Coupon
 from coupon.api.serializers import CouponSerializer
 
 # Create your views here.
 class CouponAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, format=None):
         coupons = Coupon.objects.all()
         serializer = CouponSerializer(coupons, many=True)
