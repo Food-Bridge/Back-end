@@ -14,8 +14,8 @@ class SubCategorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class RestaurantSerializer(serializers.ModelSerializer):
-    minDeliveryTimeMinutes = serializers.SerializerMethodField()
-    maxDeliveryTimeMinutes = serializers.SerializerMethodField()
+    # minDeliveryTimeMinutes = serializers.SerializerMethodField()
+    # maxDeliveryTimeMinutes = serializers.SerializerMethodField()
     
     mainCategory_name = serializers.SerializerMethodField()
     subCategory_name = serializers.SerializerMethodField()
@@ -30,17 +30,17 @@ class RestaurantSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('최대 배달 예상 시간이 1시간 10분을 넘을 수 없습니다.')
         return maxDeliveryTimeMinutes
 
-    def get_minDeliveryTimeMinutes(self, obj):
-        if obj.minDeliveryTime:
-            minDeliveryTimeMinutes =  obj.minDeliveryTime.hour * 60 + obj.minDeliveryTime.minute
-            return minDeliveryTimeMinutes
-        return None
+    # def get_minDeliveryTimeMinutes(self, obj):
+    #     if obj.minDeliveryTime:
+    #         minDeliveryTimeMinutes =  obj.minDeliveryTime.hour * 60 + obj.minDeliveryTime.minute
+    #         return minDeliveryTimeMinutes
+    #     return None
 
-    def get_maxDeliveryTimeMinutes(self, obj):
-        if obj.maxDeliveryTime:
-            maxDeliveryTimeMinutes =  obj.maxDeliveryTime.hour * 60 + obj.maxDeliveryTime.minute
-            return maxDeliveryTimeMinutes
-        return None
+    # def get_maxDeliveryTimeMinutes(self, obj):
+    #     if obj.maxDeliveryTime:
+    #         maxDeliveryTimeMinutes =  obj.maxDeliveryTime.hour * 60 + obj.maxDeliveryTime.minute
+    #         return maxDeliveryTimeMinutes
+    #     return None
 
     def get_mainCategory_name(self, obj):
         if obj.mainCategory:

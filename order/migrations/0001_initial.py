@@ -16,9 +16,16 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='RestaurantLike',
+            name='Order',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('menu_list', models.JSONField(blank=True, default=dict)),
+                ('option_list', models.JSONField(blank=True, null=True)),
+                ('total_price', models.PositiveIntegerField(default=0)),
+                ('deliveryman_request', models.TextField(blank=True)),
+                ('paymentMethod', models.CharField(choices=[('credit_card', '신용 카드'), ('cash', '현금')], max_length=20)),
+                ('order_state', models.CharField(choices=[('order_complete', '주문완료'), ('payment_complete', '결제완료'), ('order_cancel', '주문취소'), ('payment_cancel', '결제취소')], default='주문완료', max_length=16, verbose_name='주문서 상태')),
+                ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('restaurant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='restaurant.restaurant')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],

@@ -40,20 +40,27 @@ urlpatterns = [
     ##### 메인 페이지
     path('users/', include('users.api.urls')),
 
-    ##### 가게 페이지
+    ##### 가게/가게 메뉴 페이지
     path('restaurant/', include('restaurant.api.urls')),
+    path('restaurant/<int:res_id>/menu/', include('menu.api.urls')),
 
     ##### 쿠폰 페이지
     path('coupon/', include('coupon.api.urls')),
     
     ##### 검색
     path('search/', include('search.api.urls')),
+    
+    ##### 주문
+    path('order/', include('order.api.urls')),
 
     ##### 커뮤니티 페이지
     path('community/', include('community.api.urls')),
 
     ##### 찜 목록 페이지
     path('like/', include('like.api.urls')),
+  
+    ##### 장바구니
+    path('cart/', include('cart.api.urls')),
 
     ##### 유저가 보유하고 있는 쿠폰
     path('userscoupon/', include('users_coupon.api.urls')),

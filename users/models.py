@@ -131,20 +131,6 @@ class Address(models.Model):
             models.UniqueConstraint(fields=['user'], condition=models.Q(is_default=True), name='Default address unique')
         ]
 
-# Create your models here.
-class Order(models.Model):
-    PAYMENT_METHOD_CHOICES = [
-        ('credit_card', '신용 카드'),
-        ('cash', '현금'),
-    ]    
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    createdDate = models.DateTimeField(auto_now_add=True)
-    requests = models.TextField()
-    paymentMethod = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
-    totalPrice = models.IntegerField()
-    status = models.BooleanField(default=False)
-
 class Profile(models.Model):
     # primary_key를 User의 pk로 설정하여 통합 관리
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)

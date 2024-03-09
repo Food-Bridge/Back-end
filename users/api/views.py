@@ -6,7 +6,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.authentication import CSRFCheck
-from users.models import User, Address, Order, Profile
+from users.models import User, Address, Profile
 from coupon.models import Coupon
 from users_coupon.models import UserCoupon
 from django.http import JsonResponse
@@ -115,12 +115,13 @@ class UserAddressAPIView(generics.ListCreateAPIView):
 class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Address.objects.all()  # 뷰에서 사용할 쿼리셋을 할당합니다.
     
-    def get_object(self):
+    def get_queryset(self):
         user_id = self.request.user.id
         obj_id = self.kwargs.get('pk')
         queryset = Address.objects.filter(user_id=user_id, id=obj_id)
-        return get_object_or_404(queryset)
+        return queryset
     
     ##### update 메서드 오버라이딩
     def update(self, request, *args, **kwargs):
@@ -143,14 +144,6 @@ class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         instance.save()
         self.perform_update(serializer)
         return Response({'is_default': instance.is_default}, status=status.HTTP_200_OK)
-
-
-# class UserOrderAPIView(generics.RetrieveUpdateDestroyAPIView):
-#     serializer_class = OrderSerializer
-
-#     def get_queryset(self):
-#         user_id = self.request.user.id
-#         return Order.objects.filter(user_id=user_id)
 
 class GetKakaoAccessView(APIView):
     serializer_class = SocialLoginSerializer
@@ -272,3 +265,12 @@ class ProfileView(generics.RetrieveUpdateAPIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UserInfoAPIView(generics.ListAPIView):
+    """
+    get:
+        Returns a list of all existing posts
+    """
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = User.objects.all()
