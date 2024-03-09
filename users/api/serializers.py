@@ -123,6 +123,13 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'username',)
+        
+class UserAddressSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Order
+        fields = "__all__"
+
 
 class SocialLoginSerializer(serializers.Serializer):
     access_token = serializers.CharField()

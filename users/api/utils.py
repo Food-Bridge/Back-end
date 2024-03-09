@@ -1,5 +1,7 @@
 import jwt
 from django.conf import settings
+from coupon.models import Coupon
+from users_coupon.models import UserCoupon
 from rest_framework.exceptions import AuthenticationFailed
 
 def generate_access_token(user):

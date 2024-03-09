@@ -1,19 +1,14 @@
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
-from django.core.serializers import serialize
-from django.conf import settings
 import datetime
+
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from datetime import timedelta
 from django.db.models import F, Count
+from django.db import transaction
 
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from rest_framework.pagination import PageNumberPagination
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
 from .permissions import IsOwnerOrReadOnly
@@ -29,10 +24,6 @@ from community.api.pagination import PostLimitOffsetPagination
 from community.api.mixins import MutlipleFieldMixin
 
 class ListPostAPIView(generics.ListAPIView):
-    """
-    get:
-        Returns a list of all existing posts
-    """
     queryset = Blog.objects.all()
     serializer_class = PostListSerializer
     permission_classes = [AllowAny]
@@ -42,16 +33,7 @@ class CreatePostAPIView(APIView):
     queryset = Blog.objects.all()
     serializer_class = PostCreateUpdateSerializer
     permission_classes = [IsAuthenticated]
-    """
-    post:
-        Creates a new post instance. Returns created post data
 
-        parameters: [title, content]
-    """
-    ##### Blog 모델에 아래와 같은 코드로 외래키를 지정
-    ##### author = models.ForeignKey(User, on_delete=models.CASCADE)
-    ##### 이 때, author에는 작성한 사용자의 아이디가 들어간다.
-    ##### 다른 것을 알 필요없이 누가 썼는지에 대한 정보를 직렬화해서 이 값만을 넘겨주면 author 필드를 입력하지 않아도 됨(원래 그래야 함)
     def post(self, request, *args, **kwargs):
         user_id = request.user.id
         request.data['author'] = user_id
@@ -63,35 +45,40 @@ class CreatePostAPIView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    get:
-        Returns the details of a post instance. Searches post using pk field.
-
-    put:
-        Updates an existing post. Returns updated post data
-
-        parameters: [slug, title, content]
-
-    delete:
-        Delete an existing post
-
-        parameters = [pk]
-    """
     queryset = Blog.objects.all()
     serializer_class = PostDetailSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.views += 1
-        instance.save()
-        return super().retrieve(request, *args, **kwargs)
+    def retrieve(self, request, pk=None):
+        instance = get_object_or_404(self.get_queryset(), pk=pk)
+        tomorrow = datetime.datetime.replace(timezone.datetime.now(), hour=23, minute=59, second=0)
+        expires = datetime.datetime.strftime(tomorrow, "%a, %d-%b-%Y %H:%M:%S GMT")
+
+        serializer = self.get_serializer(instance)
+        response = Response(serializer.data, status=status.HTTP_200_OK)
+
+        if request.user.is_authenticated:
+            user_id = request.user.id
+            user_cookie_key = f'user_{user_id}_hit'
+
+            if request.COOKIES.get(user_cookie_key) is not None:
+                cookies = request.COOKIES.get(user_cookie_key)
+                cookies_list = cookies.split("|")
+                if str(pk) not in cookies_list:
+                    response.set_cookie(user_cookie_key, cookies + f'|{pk}', expires=expires)
+                    with transaction.atomic():
+                        instance.views += 1
+                        instance.save()
+            else:
+                # 쿠키가 없는 경우, 새로 생성해서 해당 게시물 번호를 저장
+                response.set_cookie(user_cookie_key, f'{pk}', expires=expires)
+                instance.views += 1
+                instance.save()
+        print(cookies)
+        return response
 
 class ListCommentAPIView(APIView):
-    """
-    get:
-        Returns the list of comments on a particular post
-    """
+    serializer_class = CommentSerializer
     permission_classes = [AllowAny]
 
     def get(self, request, pk):
@@ -101,12 +88,6 @@ class ListCommentAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class CreateCommentAPIView(APIView):
-    """
-    post:
-        Create a comment instnace. Returns created comment data
-
-        parameters: [pk, content]
-    """
     serializer_class = CommentCreateUpdateSerializer
     permission_classes = [IsAuthenticated]
 
@@ -120,20 +101,6 @@ class CreateCommentAPIView(APIView):
             return Response({"errors" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         
 class DetailCommentAPIView(MutlipleFieldMixin, generics.RetrieveUpdateDestroyAPIView):
-    """
-    get:
-        Returns the details of a comment instance. Searches comment using comment id and post pk in the url.
-
-    put:
-        Updates an existing comment. Returns updated comment data
-
-        parameters: [post, author, content]
-
-    delete:
-        Delete an existing comment
-
-        parameters: [post, author, content]
-    """
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     queryset = Comment.objects.all()
     lookup_field = ["post", "id"]
@@ -157,24 +124,46 @@ class LikeAPIView(APIView):
             post.save()
             return Response("like", status=status.HTTP_200_OK)
         
-##### 일간 인기글 갱신
-class DailyPopularPostsAPIView(APIView):
-    permission_classes = [AllowAny]
-    def get(self, request, format=None):
-        now = timezone.now()
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
-        
-        ##### 
-        sorted_posts = Blog.objects.filter(created_at__range=(today_start, today_end)).annotate(
-            weight=F('views') + Count('like_users') + Count('comments')).order_by('-weight')
-        serializer = PopularPostSerializer(sorted_posts, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-##### 최신순 글 정렬
 class LatestPostsAPIView(APIView):
+    serializer_class = PostListSerializer
     permission_classes = [AllowAny]
     def get(self, request, *args, **kwargs):
-        latest_posts = Blog.objects.all().order_by('-created_at')[:5]
+        latest_posts = Blog.objects.all().order_by('-created_at')[:10]
         serializer = PostListSerializer(latest_posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class DailyPopularPostAPIView(APIView):
+    serializer_class = PopularPostSerializer
+    permission_classes = [AllowAny]
+    def get(self, request, *args, **kwargs):
+        start_of_today = timezone.localtime(timezone.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_yesterday = start_of_today - datetime.timedelta(seconds=1)
+
+        start_of_daily = end_of_yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_daily = end_of_yesterday.replace(hour=23, minute=59, second=59, microsecond=0)
+        print(start_of_daily)
+        print(end_of_daily)
+
+        popular_posts = Blog.objects.filter(created_at__range=[start_of_daily, end_of_daily])
+        popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
+        popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
+        serializer = PopularPostSerializer(popular_posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class WeekPopularPostAPIView(APIView):
+    serializer_class = PopularPostSerializer
+    permission_classes = [AllowAny]
+    def get(self, request, *args, **kwargs):
+        start_of_week = timezone.localtime(timezone.now()) - datetime.timedelta(days=timezone.localtime(timezone.now()).weekday())
+        start_of_week = start_of_week.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_week = start_of_week + datetime.timedelta(days=6, hours=23, minutes=59, seconds=59)
+
+        if timezone.localtime(timezone.now()).weekday() == 0 and timezone.localtime(timezone.now()).hour == 0 and timezone.localtime(timezone.now()).minute == 0 and timezone.localtime(timezone.now()).second == 0:
+            start_of_week = start_of_week - datetime.timedelta(days=7)
+            end_of_week = end_of_week - datetime.timedelta(days=7)
+
+        popular_posts = Blog.objects.filter(created_at__range=[start_of_week, end_of_week])
+        popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
+        popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
+        serializer = PopularPostSerializer(popular_posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

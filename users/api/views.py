@@ -7,6 +7,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.views import APIView
 from rest_framework.authentication import CSRFCheck
 from users.models import User, Address, Profile
+from coupon.models import Coupon
+from users_coupon.models import UserCoupon
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.conf import settings
@@ -16,7 +18,6 @@ from users.api.serializers import (
     LoginSerializer,
     LogoutSerializer,
     ProfileSerializer,
-    UserSerializer,
     AddressSerializer,
     SocialLoginSerializer
     )
@@ -29,7 +30,10 @@ class RegisterAPIView(generics.GenericAPIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-        
+
+            coupon, created = Coupon.objects.get_or_create(code='회원가입 축하 쿠폰')
+            UserCoupon.objects.create(user=user, coupon=coupon)
+
             token = TokenObtainPairSerializer.get_token(user)
             refresh_token = str(token)
             access_token = str(token.access_token)

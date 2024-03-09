@@ -36,6 +36,7 @@ class CustomUserManager(BaseUserManager):
         return user
     
 class User(AbstractBaseUser):
+    coupons = models.ManyToManyField(Coupon)
     email = models.EmailField(max_length=255, unique=True)
     username = models.CharField(max_length=255, unique=False)
     is_admin = models.BooleanField(default=False)
@@ -92,6 +93,9 @@ class Address(models.Model):
     #### try ~ except(raise 예외 처리)
     def save(self, *args, **kwargs):
         api_key = getattr(settings, "KAKAO_REST_API_KEY")
+        if not self.building_name:
+            self.building_name = ""
+
         if not self.nickname:
             self.nickname = f"{self.road_address} {self.building_name}"
 
