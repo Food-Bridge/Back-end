@@ -103,20 +103,44 @@ class UserAddressAPIView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(user_id=request.user.id)  # 사용자 ID 추가
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    def KaKaoAPIView(address):
-        KAKAO_REST_API_KEY = getattr(settings, 'KAKAO_REST_API_KEY')
-    
-        url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
-        results = requests.get(urlparse(url).geturl(), headers={"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"}).json()
+        
+        data = serializer.validated_data
+        data['user_id'] = self.request.user.id
+        data['full_address'] = f"{data['road_address']} {data['detail_address']}"
 
+        if 'detail_address' in data:
+            try:
+                address = data['detail_address']
+                geocoded_data = self.geocode_address(address)
+                if geocoded_data:
+                    data.update(geocoded_data)
+            except requests.exceptions.RequestException as e:
+                return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save(**data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def geocode_address(self, address):
+        KAKAO_REST_API_KEY = getattr(settings, 'KAKAO_REST_API_KEY')
+        url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
+        
+        try:
+            response = requests.get(urlparse(url).geturl(), headers={"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"})
+            if response.status_code == 200:
+                result = response.json()
+                documents = result.get('documents', [])
+                if documents:
+                    return {
+                        'latitude': float(documents[0]['y']),
+                        'longitude': float(documents[0]['x']),
+                    }
+            else:
+                return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+        except requests.exceptions.RequestException as e:
+            raise Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressSerializer
     permission_classes = [permissions.IsAuthenticated]
-    queryset = Address.objects.all()  # 뷰에서 사용할 쿼리셋을 할당합니다.
     
     def get_queryset(self):
         user_id = self.request.user.id
@@ -124,27 +148,21 @@ class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         queryset = Address.objects.filter(user_id=user_id, id=obj_id)
         return queryset
     
-    ##### update 메서드 오버라이딩
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         
-        user_id = self.request.user.id  # 사용자의 ID를 가져옴
-        obj_id = self.kwargs.get('pk')  # 주소 객체의 ID를 가져옴
+        user_id = self.request.user.id
+        obj_id = self.kwargs.get('pk')
         
-        queryset = Address.objects.filter(user_id=user_id, id=obj_id)  # 해당 사용자의 주소 중에서 가져옴
-        instance = get_object_or_404(queryset)
+        instance = get_object_or_404(Address, user_id=user_id, id=obj_id)
         
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
-        if instance.is_default:
-            instance.is_default = False
-        else:
-            instance.is_default = True
-
+        instance.is_default = not instance.is_default
         instance.save()
-        self.perform_update(serializer)
         return Response({'is_default': instance.is_default}, status=status.HTTP_200_OK)
+
 
 class GetKakaoAccessView(APIView):
     serializer_class = SocialLoginSerializer

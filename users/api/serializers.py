@@ -114,7 +114,7 @@ class AddressSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source="user.id")
     class Meta:
         model = Address
-        fields = ['user', 'id', 'nickname', 'detail_address', 'road_address', 'jibun_address', 'building_name', 'sigungu', 'is_default' ]
+        fields = ['user', 'id', 'nickname', 'detail_address', 'road_address', 'jibun_address', 'building_name', 'sigungu', 'is_default', 'full_address',]
 
 ##### 전체 사용자 정보를 조회(주소 정보 처리 확인 차원)
 class UserSerializer(serializers.ModelSerializer):
