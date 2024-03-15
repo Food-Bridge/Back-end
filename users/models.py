@@ -1,5 +1,6 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, IntegrityError, transaction
+from django.db.models import UniqueConstraint, Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
@@ -80,6 +81,7 @@ class User(AbstractBaseUser):
 
 class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    full_address = models.CharField(max_length=255, blank=True, null=True)
     detail_address = models.CharField(max_length=255, verbose_name='address')
     nickname = models.CharField(max_length=255, null=True, blank=True)
     building_name = models.CharField(max_length=255, null=True)
@@ -87,48 +89,26 @@ class Address(models.Model):
     jibun_address = models.CharField(max_length=255, blank=True, null=True)
     sigungu = models.CharField(max_length=255, blank=True, null=True)
     is_default = models.BooleanField(default=False)
-    latitude = models.FloatField(validators=[MinValueValidator(-90), MaxValueValidator(90)])
-    longitude = models.FloatField(validators=[MinValueValidator(-180), MaxValueValidator(180)])
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        null=True
+    )
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        null=True
+    )
 
-    #### try ~ except(raise 예외 처리)
-    def save(self, *args, **kwargs):
-        api_key = getattr(settings, "KAKAO_REST_API_KEY")
-        if not self.building_name:
-            self.building_name = ""
-
-        if not self.nickname:
-            self.nickname = f"{self.road_address} {self.building_name}"
-
-        if not self.latitude and not self.longitude:
-            address_to_geocode = f"{self.detail_address}"
-            response = requests.get(f"https://dapi.kakao.com/v2/local/search/address.json?query={address_to_geocode}",
-                                    headers={"Authorization": f"KakaoAK {api_key}"})
-            if response.status_code == 200:
-                result = response.json()
-                documents = result.get('documents', [])
-                if documents:
-                    self.latitude = float(documents[0]['y'])
-                    self.longitude = float(documents[0]['x'])
-        if self.latitude and self.longitude:
-            response = requests.get(
-                f"https://dapi.kakao.com/v2/local/geo/coord2address.json?x={self.longitude}&y={self.latitude}&input_coord=WGS84",
-                headers={'Authorization': f"KakaoAK {api_key}"}
-            )
-            if response.status_code == 200:
-                result = response.json()
-                documents = result.get('documents', [])
-
-                if documents:
-                    road_address_info = documents[0].get('road_address', {})
-                    jibun_address_info = documents[0].get('address', {})
-                    self.building_name = road_address_info.get('building_name', None)
-                    self.road_address = road_address_info.get('address_name', None)
-                    self.jibun_address = jibun_address_info.get('address_name', None)
-        super().save(*args, **kwargs)
-    
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['user'], condition=models.Q(is_default=True), name='Default address unique')
+            UniqueConstraint(
+                fields=['user', 'is_default'],
+                condition=Q(is_default=True),
+                name="한 유저당 하나의 주소만 기본 주소지로 등록되어야합니다."
+            )
         ]
 
 class Profile(models.Model):
