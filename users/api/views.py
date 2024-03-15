@@ -133,8 +133,6 @@ class UserAddressAPIView(generics.ListCreateAPIView):
                         'latitude': float(documents[0]['y']),
                         'longitude': float(documents[0]['x']),
                     }
-            else:
-                return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
         except requests.exceptions.RequestException as e:
             raise Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -148,20 +146,27 @@ class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         queryset = Address.objects.filter(user_id=user_id, id=obj_id)
         return queryset
     
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        
-        user_id = self.request.user.id
-        obj_id = self.kwargs.get('pk')
-        
-        instance = get_object_or_404(Address, user_id=user_id, id=obj_id)
-        
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
+    def patch(self, request, *args, **kwargs):
+        """
+        주소 정보 부분 수정
+        """
+        user = self.request.user
+        address = self.get_object()
 
-        instance.is_default = not instance.is_default
-        instance.save()
-        return Response({'is_default': instance.is_default}, status=status.HTTP_200_OK)
+        if not address.user == user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
+        # 해당 User의 기본 주소 찾아서 False 처리
+        Address.objects.filter(user_id=user.id, is_default=True).update(is_default=False)
+
+        address.is_default = True
+        address.save()
+
+        serializer = AddressSerializer(address, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)        
 
 
 class GetKakaoAccessView(APIView):

@@ -111,21 +111,6 @@ class Address(models.Model):
             )
         ]
 
-    def save(self, *args, **kwargs):
-        if self.is_default:
-            try:
-                with transaction.atomic():
-                    # 현재 로그인한 사용자가 이미 기본 주소를 가지고 있는지 확인
-                    isAddress = Address.objects.filter(user=self.user, is_default=True).first()
-                    if isAddress:
-                        isAddress.is_default = False
-                        isAddress.save()
-                    super().save(*args, **kwargs)
-            except IntegrityError:
-                raise IntegrityError("해당 유저는 이미 기본 주소지를 등록했습니다.")
-        else:
-            super().save(*args, **kwargs)
-
 class Profile(models.Model):
     # primary_key를 User의 pk로 설정하여 통합 관리
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
