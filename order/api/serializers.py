@@ -3,7 +3,9 @@ from order.models import Order
 
 class OrderSerializer(serializers.ModelSerializer):
     restaurant_name = serializers.ReadOnlyField(source="restaurant.name")
-    restaurant_image = serializers.ImageField(source="restaurant.image")
+    restaurant_image = serializers.ImageField(
+        source="restaurant.image", read_only=True
+    )
     delivery_fee = serializers.ReadOnlyField(source="restaurant.deliveryFee")
     
     payment_method_name = serializers.CharField(
@@ -29,6 +31,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "option_list", 
             "total_price", 
             "deliveryman_request",
+            "is_deliver",
             "delivery_state_name",
             "payment_method",
             "payment_method_name",
