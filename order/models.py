@@ -19,7 +19,23 @@ class Order(models.Model):
         ('credit_card', '신용 카드'),
         ('cash', '현금'),
     ]
-    paymentMethod = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES)
+    
+    deliver_address = models.CharField(blank=True, null=True, max_length=200)
+    is_deliver = models.BooleanField(default=True)
+    
+    DELIVERY_IN_STATE = [
+        ('waiting', "대기"),
+        ('pickup_complete', "포장완료"),
+        ('delivery_complete', "배달완료")
+    ]
+    
+    delivery_state = models.CharField(
+        default="대기",
+        choices=DELIVERY_IN_STATE,
+        verbose_name="포장배달 상태",
+        max_length=20
+    )
     
     STATE_IN_ORDER = [
         ('order_complete', '주문완료'),
@@ -35,3 +51,4 @@ class Order(models.Model):
         max_length=16
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
