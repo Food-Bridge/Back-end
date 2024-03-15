@@ -47,7 +47,7 @@ class Restaurant(models.Model):
     start = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0, 24), MaxValueValidator(24)], verbose_name="영업 시작 시간")
     end = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0, 36), MaxValueValidator(36)], verbose_name="영업 마감 시간")
     operatingTime = models.CharField(max_length=255, verbose_name="운영 시간 설명")
-    delivertyFee = models.PositiveIntegerField(default=0, verbose_name="배달 요금")
+    deliveryFee = models.PositiveIntegerField(default=0, verbose_name="배달 요금")
     
     mainCategory = models.ForeignKey(
         MainCategory,
