@@ -1,7 +1,8 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from django.contrib import auth
 from django.conf import settings
@@ -84,10 +85,12 @@ class LoginSerializer(serializers.ModelSerializer):
         email = attrs.get('email', '')
         password = attrs.get('password', '')
         user = authenticate(email=email, password=password)  # authenticate에서 email 사용
+        
         if not user:
-            raise AuthenticationFailed({'message' : 'User does not exist. try again'})
+            raise serializers.ValidationError({'message' : 'User does not exist. try again'})
         if not user.is_active:
-            raise AuthenticationFailed({'message' : 'Account disabled, contact admin'})
+            raise serializers.ValidationError({'message' : 'Account disabled, contact admin'})
+        
         return {
             'email': user.email,
             'username': user.username,
