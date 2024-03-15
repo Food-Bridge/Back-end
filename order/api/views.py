@@ -55,6 +55,10 @@ class OrderAPIView(generics.ListCreateAPIView):
     serializer_class = OrderSerializer
     queryset = Order.objects.all()
     
+    def get_queryset(self):
+        user = self.request.user
+        return Order.objects.filter(user=user)
+    
     def post(self, request, *args, **kwargs):
         restaurant_id = request.data.get('restaurant')
         menu_data = request.data.get('menu_list', [])  # 메뉴 데이터 가져오기
