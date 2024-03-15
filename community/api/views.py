@@ -30,18 +30,22 @@ class ListPostAPIView(generics.ListAPIView):
     pagination_class = PostLimitOffsetPagination
 
 class CreatePostAPIView(APIView):
-    queryset = Blog.objects.all()
+    queryset = Blog.objects.all()   
     serializer_class = PostCreateUpdateSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         user_id = request.user.id
-        request.data['author'] = user_id
-        serializer = PostCreateUpdateSerializer(data=request.data, context={'request': request})
+        mutable_data = request.data.copy()
+        mutable_data['author'] = user_id
+        serializer = PostCreateUpdateSerializer(data=mutable_data, context={'request': request})
+        
         if serializer.is_valid(raise_exception=True):
             serializer.save(author_id=user_id)
+            print(serializer.data)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
+            print(serializer.error)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -74,7 +78,6 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
                 response.set_cookie(user_cookie_key, f'{pk}', expires=expires)
                 instance.views += 1
                 instance.save()
-        print(cookies)
         return response
 
 class ListCommentAPIView(APIView):
