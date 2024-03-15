@@ -1,6 +1,7 @@
 from order.api.serializers import OrderSerializer
 from order.models import Order
 from restaurant.models import Restaurant
+from coupon.models import Coupon
 from menu.models import Menu, MenuOption
 from rest_framework import permissions, generics, status
 from rest_framework.response import Response
@@ -18,6 +19,7 @@ class OrderAPIView(generics.ListCreateAPIView):
     
     메뉴 2개, 옵션 2개 이상일 경우의 예
     ```
+    "coupon_code": USERSIGNUP,
     {"menu_list":[
         {
         "menu_id": 1,
@@ -64,6 +66,7 @@ class OrderAPIView(generics.ListCreateAPIView):
         menu_data = request.data.get('menu_list', [])  # 메뉴 데이터 가져오기
         option_data = request.data.get('option_list', [])  # 옵션 데이터 가져오기
         required_options_count = request.data.get('required_options_count') # 필수 옵션 개수 가져오기
+        coupon_code = request.data('coupon_code') # 쿠폰 코드 가져오기
         
         # 현재 사용자 정보 가져오기
         user = request.user
@@ -73,6 +76,12 @@ class OrderAPIView(generics.ListCreateAPIView):
             restaurant = Restaurant.objects.get(id=restaurant_id)
         except Restaurant.DoesNotExist:
             return Response({'error': '유효하지 않은 음식점입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 쿠폰 코드가 유효한지 확인
+        try:
+            coupon = coupon.objects.get(code=coupon_code)
+        except Coupon.DoesNotExist:
+            return Response({'error': '유효하지 않은 쿠폰 코드입니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 메뉴와 옵션을 저장할 리스트 초기화
         menus = []

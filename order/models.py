@@ -2,11 +2,12 @@ from django.db import models
 from users.models import User
 from restaurant.models import Restaurant
 from menu.models import Menu
+from coupon.models import Coupon
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    
+    coupon_code = models.ForeignKey(Coupon, null=True, on_delete=models.SET_NULL)
     order_id = models.CharField(blank=True, null=True, max_length=50) # 주문 번호
     menu_list = models.JSONField(blank=True, default=dict) # 메뉴
     option_list = models.JSONField(blank=True, null=True) # 옵션
