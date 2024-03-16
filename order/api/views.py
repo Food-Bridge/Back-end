@@ -1,8 +1,9 @@
-from order.api.serializers import OrderSerializer
-from order.models import Order
+from order.api.serializers import (OrderSerializer,
+                                   ReviewSerializer)
+from order.models import Order, UserOrderReview
 from restaurant.models import Restaurant
 from menu.models import Menu, MenuOption
-from rest_framework import permissions, generics, status
+from rest_framework import permissions, generics, status, serializers
 from rest_framework.response import Response
 from datetime import datetime
 
@@ -133,8 +134,46 @@ class OrderAPIView(generics.ListCreateAPIView):
         else:
             return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 class OrderDetailAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = OrderSerializer
     queryset = Order.objects.all()
+
+class OrderHistoryAPIView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = OrderSerializer
+    
+    # [주문완료] 처리된 상태의 주문 결과만을 조회
+    def get_object(self):
+        return Order.objects.filter(
+            user=self.request.user,
+            delivery_state='delivery_complete',
+        ).first()
+    
+class CompletedOrderReviewAPIView(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ReviewSerializer
+
+    # [주문완료] 처리된 상태 Order내역을 가져올 수 있어야 함
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+        queryset = UserOrderReview.objects.filter(order__id=pk)
+        return queryset
+
+    def perform_create(self, serializer):
+        # 내가 작성하려는 리뷰의 주문을 가져온다.
+        order = Order.objects.filter(
+            id=self.kwargs.get('pk'),  # 주문의 pk를 가져옴
+            user=self.request.user,
+            delivery_state='delivery_complete',
+        ).first()
+
+        # [주문완료] 처리된 상태의 주문이 있다면 그것에 대한 리뷰를 작성할 수 있다.
+        if order:
+            serializer.save(order=order, user=self.request.user)
+        else:
+            raise serializers.ValidationError("리뷰를 작성할 수 없습니다.")
+    
+class RetrieveReviewAPIView(generics.RetrieveAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ReviewSerializer
