@@ -14,7 +14,7 @@ class Order(models.Model):
     
     total_price = models.PositiveIntegerField(default=0)  # 주문의 총 가격
     deliveryman_request = models.TextField(blank=True, null=True) # 배송기사 요청
-    required_options_count = models.PositiveIntegerField(default=1) 
+    required_options_count = models.PositiveIntegerField(default=1) # 필수 메뉴 개수
     
     PAYMENT_METHOD_CHOICES = [
         ('credit_card', '신용 카드'),

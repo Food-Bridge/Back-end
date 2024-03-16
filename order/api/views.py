@@ -5,7 +5,7 @@ from coupon.models import Coupon
 from menu.models import Menu, MenuOption
 from rest_framework import permissions, generics, status
 from rest_framework.response import Response
-from datetime import datetime
+from datetime import datetime, timezone
 
 class OrderAPIView(generics.ListCreateAPIView):
     """
@@ -77,12 +77,8 @@ class OrderAPIView(generics.ListCreateAPIView):
         except Restaurant.DoesNotExist:
             return Response({'error': '유효하지 않은 음식점입니다.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # 쿠폰 코드가 유효한지 확인
-        try:
-            coupon = coupon.objects.get(code=coupon_code)
-        except Coupon.DoesNotExist:
-            return Response({'error': '유효하지 않은 쿠폰 코드입니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
+        
+        
         # 메뉴와 옵션을 저장할 리스트 초기화
         menus = []
         options = []
@@ -121,7 +117,21 @@ class OrderAPIView(generics.ListCreateAPIView):
                 total_price += option_price * option_quantity  # 옵션 가격과 수량을 곱하여 총 가격에 더함
             except MenuOption.DoesNotExist:
                 return Response({'error': '존재하지 않는 옵션이 주문되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
+            
+        # 쿠폰 코드가 유효한지 확인
+        if coupon_code is not None:
+            try:
+                coupon = Coupon.objects.get(code=coupon_code)
+                if coupon.expiration_date < timezone.now():
+                    return Response({'error': "입력한 쿠폰의 유효기간이 지났습니다."}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # 쿠폰가격을 최종 가격에 적용
+                total_price = total_price - coupon.discount_price
+                if total_price <= 0:
+                    total_price = 0
+            except Coupon.DoesNotExist:
+                return Response({'error': '유효하지 않은 쿠폰 코드입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            
         # 주문 생성
         order_data = {
             'user': user.id,
