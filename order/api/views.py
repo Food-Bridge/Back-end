@@ -174,6 +174,9 @@ class CompletedOrderReviewAPIView(generics.ListCreateAPIView):
         else:
             raise serializers.ValidationError("리뷰를 작성할 수 없습니다.")
     
-class RetrieveReviewAPIView(generics.RetrieveAPIView):
+class RetrieveReviewAPIView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        return UserOrderReview.objects.filter(user=self.request.user)
