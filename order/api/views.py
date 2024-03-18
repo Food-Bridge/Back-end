@@ -5,7 +5,8 @@ from coupon.models import Coupon
 from menu.models import Menu, MenuOption
 from rest_framework import permissions, generics, status
 from rest_framework.response import Response
-from datetime import datetime, timezone
+from datetime import datetime
+from django.utils import timezone
 
 class OrderAPIView(generics.ListCreateAPIView):
     """
@@ -14,44 +15,43 @@ class OrderAPIView(generics.ListCreateAPIView):
     3. total_price : 최종 금액
     4. deliveryman_request : 배송시 요청 사항
     5. required_options_count : 최소 필수 주문 개수
-    6. paymentMethod : credit_card, cash
+    6. payment_method : credit_card, cash
     7. restaurant : 레스토랑 id
+    8. coupon_code : 쿠폰코드
     
     메뉴 2개, 옵션 2개 이상일 경우의 예
     ```
-    "coupon_code": USERSIGNUP,
-    {"menu_list":[
-        {
-        "menu_id": 1,
-        "menu_name": "양념치킨",
-        "price": 15000,
-        "quantity": 1 
+    "coupon_code": "USERSIGNUP",
+    {
+        "menu_list" : [
+            {
+            "menu_id": 1,
+            "menu_name": "양념치킨",
+            "price": 15000,
+            "quantity": 1 
         }
     ],
-    "option_list":[
+    "option_list" : [
         {
-        "option_id": 1,
-        "option_name": "소스 추가",
-        "price": 1000,
-        "quantity": 1
+            "option_id": 1,
+            "option_name": "소스 추가",
+            "price": 1000,
+            "quantity": 1
         }
     ],
-        "name": "양념 치킨",
-        "price": 15000,
-        "content": null,
-        "image": null,
-        "required_options_count": 1,
-        "is_main": false,
-        "is_popular": false,
-        "restaurant": 1,
+    "name": "양념 치킨",
+    "price": 15000,
+    "content": null,
+    "image": null,
+    "required_options_count": 1,
+    "is_main": false,
+    "is_popular": false,
+    "restaurant": 1,
     "order_state" : "order_complete",
-    "paymentMethod" : "cash",
+    "payment_method" : "cash",
     "restaurant": 0,
     }
-    }
-    ...
     ```
-    }
     """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = OrderSerializer
@@ -66,7 +66,7 @@ class OrderAPIView(generics.ListCreateAPIView):
         menu_data = request.data.get('menu_list', [])  # 메뉴 데이터 가져오기
         option_data = request.data.get('option_list', [])  # 옵션 데이터 가져오기
         required_options_count = request.data.get('required_options_count') # 필수 옵션 개수 가져오기
-        coupon_code = request.data('coupon_code') # 쿠폰 코드 가져오기
+        coupon_code = request.data.get('coupon_code') # 쿠폰 코드 가져오기
         
         # 현재 사용자 정보 가져오기
         user = request.user
@@ -138,7 +138,7 @@ class OrderAPIView(generics.ListCreateAPIView):
             'restaurant': request.data.get('restaurant'),
             'total_price': total_price,
             'deliveryman_request': request.data.get('deliveryman_request'),
-            'paymentMethod': request.data.get('paymentMethod'),
+            'payment_method': request.data.get('payment_method'),
             'order_state': request.data.get('order_state'),
             'menu_list' : menu_data,
             'option_list' : option_data,
