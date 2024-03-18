@@ -31,6 +31,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "option_list", 
             "total_price",
             "coupon_code",
+            "deliver_address",
             "deliveryman_request",
             "is_deliver",
             "delivery_state_name",

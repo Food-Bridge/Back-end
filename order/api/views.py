@@ -20,6 +20,7 @@ class OrderAPIView(generics.ListCreateAPIView):
     
     메뉴 2개, 옵션 2개 이상일 경우의 예
     ```
+    "deliver_address" : "배달 주소",
     "coupon_code": "USERSIGNUP",
     {
         "menu_list" : [
@@ -66,6 +67,7 @@ class OrderAPIView(generics.ListCreateAPIView):
         option_data = request.data.get('option_list', [])  # 옵션 데이터 가져오기
         required_options_count = request.data.get('required_options_count') # 필수 옵션 개수 가져오기
         coupon_code = request.data.get('coupon_code') # 쿠폰 코드 가져오기
+        deliver_address = request.data.get('deliver_address') # 배달 주소 가져오기
 
         # 현재 사용자 정보 가져오기
         user = request.user
@@ -136,6 +138,7 @@ class OrderAPIView(generics.ListCreateAPIView):
             'deliveryman_request': request.data.get('deliveryman_request'),
             'payment_method': request.data.get('payment_method'),
             'order_state': request.data.get('order_state'),
+            'deliver_address' : deliver_address,
             'menu_list' : menu_data,
             'option_list' : option_data,
             'order_id' : order_id
