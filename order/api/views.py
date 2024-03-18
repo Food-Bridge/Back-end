@@ -1,12 +1,11 @@
-from order.api.serializers import OrderSerializer
+from rest_framework import permissions, generics, status
+from rest_framework.response import Response
+from django.utils import timezone
 from order.models import Order
 from restaurant.models import Restaurant
 from coupon.models import Coupon
 from menu.models import Menu, MenuOption
-from rest_framework import permissions, generics, status
-from rest_framework.response import Response
-from datetime import datetime
-from django.utils import timezone
+from order.api.serializers import OrderSerializer
 
 class OrderAPIView(generics.ListCreateAPIView):
     """
@@ -56,41 +55,38 @@ class OrderAPIView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = OrderSerializer
     queryset = Order.objects.all()
-    
+
     def get_queryset(self):
         user = self.request.user
         return Order.objects.filter(user=user)
-    
+
     def post(self, request, *args, **kwargs):
         restaurant_id = request.data.get('restaurant')
         menu_data = request.data.get('menu_list', [])  # 메뉴 데이터 가져오기
         option_data = request.data.get('option_list', [])  # 옵션 데이터 가져오기
         required_options_count = request.data.get('required_options_count') # 필수 옵션 개수 가져오기
         coupon_code = request.data.get('coupon_code') # 쿠폰 코드 가져오기
-        
+
         # 현재 사용자 정보 가져오기
         user = request.user
-        
+
         # 주문할 음식점이 유효한지 확인
         try:
             restaurant = Restaurant.objects.get(id=restaurant_id)
         except Restaurant.DoesNotExist:
             return Response({'error': '유효하지 않은 음식점입니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        
-        
         # 메뉴와 옵션을 저장할 리스트 초기화
         menus = []
         options = []
         total_price = 0
-        order_id = datetime.now().strftime("%Y%m%d%H") + "_" + str(user.id)
-        
+        order_id = timezone.now().strftime("%Y%m%d%H") + "_" + str(user.id)
+
         if required_options_count is None:
             return Response({'error': "필수 주문 값을 받지 못했습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if len(menu_data) == 0:
             return Response({'error': "필수 주문 데이터가 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         if required_options_count > len(menu_data) :
             return Response({'error': "필수 주문 데이터가  부족합니다."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -117,21 +113,21 @@ class OrderAPIView(generics.ListCreateAPIView):
                 total_price += option_price * option_quantity  # 옵션 가격과 수량을 곱하여 총 가격에 더함
             except MenuOption.DoesNotExist:
                 return Response({'error': '존재하지 않는 옵션이 주문되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-            
+
         # 쿠폰 코드가 유효한지 확인
         if coupon_code is not None:
             try:
                 coupon = Coupon.objects.get(code=coupon_code)
                 if coupon.expiration_date < timezone.now():
                     return Response({'error': "입력한 쿠폰의 유효기간이 지났습니다."}, status=status.HTTP_400_BAD_REQUEST)
-                
+
                 # 쿠폰가격을 최종 가격에 적용
                 total_price = total_price - coupon.discount_price
                 if total_price <= 0:
                     total_price = 0
             except Coupon.DoesNotExist:
                 return Response({'error': '유효하지 않은 쿠폰 코드입니다.'}, status=status.HTTP_400_BAD_REQUEST)
-            
+
         # 주문 생성
         order_data = {
             'user': user.id,
