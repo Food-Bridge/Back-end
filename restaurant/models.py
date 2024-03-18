@@ -34,8 +34,8 @@ class Restaurant(models.Model):
     minimumOrderPrice = models.PositiveIntegerField(default=0, verbose_name="최소 주문 금액")
     minimumPickupPrice = models.PositiveIntegerField(default=0, verbose_name=" 픽업 최소 주문 금액")
     
-    minDeliveryTime = models.PositiveSmallIntegerField(default=0, verbose_name="최소 배달 시간")
-    maxDeliveryTime = models.PositiveSmallIntegerField(default=0, verbose_name="최대 배달 시간") 
+    minDeliveryTime = models.PositiveIntegerField(default=0, verbose_name="최소 배달 시간")
+    maxDeliveryTime = models.PositiveIntegerField(default=0, verbose_name="최대 배달 시간") 
     
     minPickupTime = models.PositiveIntegerField(default=0, null=True, verbose_name="최소 픽업 시간")
     orderCount = models.PositiveIntegerField(default=0, verbose_name="주문수")
