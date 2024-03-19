@@ -42,10 +42,8 @@ class CreatePostAPIView(APIView):
         
         if serializer.is_valid(raise_exception=True):
             serializer.save(author_id=user_id)
-            print(serializer.data)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            print(serializer.error)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -144,8 +142,6 @@ class DailyPopularPostAPIView(APIView):
 
         start_of_daily = end_of_yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_daily = end_of_yesterday.replace(hour=23, minute=59, second=59, microsecond=0)
-        print(start_of_daily)
-        print(end_of_daily)
 
         popular_posts = Blog.objects.filter(created_at__range=[start_of_daily, end_of_daily])
         popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
