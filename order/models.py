@@ -6,6 +6,8 @@ from menu.models import Menu
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+
+    review_written = models.BooleanField(default=False)
     
     order_id = models.CharField(blank=True, null=True, max_length=50) # 주문 번호
     menu_list = models.JSONField(blank=True, default=dict) # 메뉴
@@ -52,9 +54,3 @@ class Order(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-class UserOrderReview(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    content = models.CharField(max_length=500)
-    created_at = models.DateTimeField(auto_now_add=True)
