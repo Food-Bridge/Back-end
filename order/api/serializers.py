@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from order.models import Order, UserOrderReview
+from order.models import Order
 
 class OrderSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
@@ -44,9 +44,3 @@ class OrderSerializer(serializers.ModelSerializer):
             "order_id"
         ]
 
-class ReviewSerializer(serializers.ModelSerializer):
-    order_id = serializers.PrimaryKeyRelatedField(source='order.id', read_only=True)  # queryset 인자 제거
-
-    class Meta:
-        model = UserOrderReview
-        fields = ['content', 'order_id', 'id',]  # order_id 필드를 'fields'에 명시
