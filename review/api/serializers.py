@@ -17,12 +17,11 @@ class OwnerCommentSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     image = ReviewImageSerializer(many=True, source='img', read_only=True)
-    ownercomment = OwnerCommentSerializer()
 
     class Meta:
         model = Review
         fields = ('id', 'user', 'restaurant', 'order', 'caption', 'menu_name',
-                  'rating', 'created_at', 'like_count', 'image', 'ownercomment')
+                  'rating', 'created_at', 'like_count', 'image',)
 
 class ReviewCreateSerializer(serializers.ModelSerializer):
     _img = ReviewImageSerializer(many=True, source="img", read_only=True)
