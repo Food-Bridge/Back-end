@@ -1,3 +1,6 @@
+import requests
+from urllib.parse import urlparse
+from django.conf import settings
 from rest_framework import permissions, generics, status
 from rest_framework.response import Response
 from django.utils import timezone
@@ -146,11 +149,41 @@ class OrderAPIView(generics.ListCreateAPIView):
         order_serializer = OrderSerializer(data=order_data)
 
         if order_serializer.is_valid():
-            order_serializer.save()
+            # 주문 데이터가 유효한 경우
+            order_instance = order_serializer.save()  # 주문을 저장하고 인스턴스를 반환합니다.
+
+            # 배달 주소 위경도 처리
+            if deliver_address:
+                try:
+                    geocoded_data = self.geocode_address(deliver_address)
+                    if geocoded_data:
+                        order_instance.latitude = geocoded_data.get('latitude')
+                        order_instance.longitude = geocoded_data.get('longitude')
+                        order_instance.save()
+                except requests.exceptions.RequestException as e:
+                    return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
             return Response(order_serializer.data, status=status.HTTP_201_CREATED)
         else:
+            # 주문 데이터가 유효하지 않은 경우
             return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def geocode_address(self, address):
+            KAKAO_REST_API_KEY = getattr(settings, 'KAKAO_REST_API_KEY')
+            url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
+            
+            try:
+                response = requests.get(urlparse(url).geturl(), headers={"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"})
+                if response.status_code == 200:
+                    result = response.json()
+                    documents = result.get('documents', [])
+                    if documents:
+                        return {
+                            'latitude': float(documents[0]['y']),
+                            'longitude': float(documents[0]['x']),
+                        }
+            except requests.exceptions.RequestException as e:
+                raise Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class OrderDetailAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.AllowAny]
