@@ -22,7 +22,7 @@ def decode_access_token(access_token):
     except jwt.InvalidTokenError:
         raise AuthenticationFailed('Invalid token, please log in again')
     
-def geocode_address(self, address):
+def geocode_address(address):
         KAKAO_REST_API_KEY = getattr(settings, 'KAKAO_REST_API_KEY')
         url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
         

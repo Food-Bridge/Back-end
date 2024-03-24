@@ -9,6 +9,7 @@ from restaurant.models import Restaurant
 from coupon.models import Coupon
 from menu.models import Menu, MenuOption
 from order.api.serializers import OrderSerializer
+from users.api.utils import geocode_address
 
 class OrderAPIView(generics.ListCreateAPIView):
     """
@@ -155,7 +156,7 @@ class OrderAPIView(generics.ListCreateAPIView):
             # 배달 주소 위경도 처리
             if deliver_address:
                 try:
-                    geocoded_data = self.geocode_address(deliver_address)
+                    geocoded_data = geocode_address(deliver_address)
                     if geocoded_data:
                         order_instance.latitude = geocoded_data.get('latitude')
                         order_instance.longitude = geocoded_data.get('longitude')
@@ -167,23 +168,6 @@ class OrderAPIView(generics.ListCreateAPIView):
         else:
             # 주문 데이터가 유효하지 않은 경우
             return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def geocode_address(self, address):
-            KAKAO_REST_API_KEY = getattr(settings, 'KAKAO_REST_API_KEY')
-            url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
-            
-            try:
-                response = requests.get(urlparse(url).geturl(), headers={"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"})
-                if response.status_code == 200:
-                    result = response.json()
-                    documents = result.get('documents', [])
-                    if documents:
-                        return {
-                            'latitude': float(documents[0]['y']),
-                            'longitude': float(documents[0]['x']),
-                        }
-            except requests.exceptions.RequestException as e:
-                raise Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class OrderDetailAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.AllowAny]
