@@ -70,5 +70,5 @@ class RestaurantReviewAPIView(generics.ListAPIView):
     serializer_class = ReviewSerializer
     
     def get_queryset(self):
-        restaurant_id = self.kwargs['pk']
+        restaurant_id = self.kwargs.get('pk')
         return Review.objects.filter(restaurant_id=restaurant_id)
