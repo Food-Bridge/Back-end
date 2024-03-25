@@ -4,8 +4,8 @@ from django.utils import timezone
 class Coupon(models.Model):
     code = models.CharField(max_length=50)
     content = models.CharField(max_length=255)
-    minimum_order_price = models.IntegerField(default=0)
-    discount_price = models.IntegerField(default=0)
+    minimum_order_price = models.PositiveIntegerField(default=0)
+    discount_price = models.PositiveIntegerField(default=0)
     expiration_date = models.DateTimeField()
 
     def expired(self):

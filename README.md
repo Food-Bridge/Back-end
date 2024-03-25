@@ -12,7 +12,9 @@
 4. python manage.py makemigrations <app-name>
 5. python manage.py migrate <app-name>
 6. python manage.py createsuperuser 
+    - 초기 데이터 입력
+7. python manage.py loaddata dummy.json
     - 어드민 계정 생성
-7. python manage.py runserver
+8. python manage.py runserver
     - localhost:8000으로 지정되어 서버 실행됨
 ```

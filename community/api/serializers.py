@@ -74,24 +74,26 @@ class PostDetailSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.id")
     post = serializers.ReadOnlyField(source="post.id")
+    id = serializers.ReadOnlyField()
 
     class Meta:
         model = Comment
-        fields = ("author", "post", "content")
+        fields = ("author", "id", "post", "content")
 
 ##### POST 요청(댓글 달기) 시리얼라이저 
 class CommentCreateUpdateSerializer(serializers.ModelSerializer):
-    post = serializers.ReadOnlyField(source="comment.id")
 
     class Meta:
         model = Comment
-        fields = ("content", "post",)
+        fields = ("content", )
 
 ##### GET/PUT/DELETE 요청(댓글 상세 조회, 수정, 삭제) 시리얼라이저
 class CommentCreateUpdateSerializer(serializers.ModelSerializer):
+    post = serializers.ReadOnlyField(source="post.id")
+    id = serializers.ReadOnlyField()
     class Meta:
         model = Comment
-        fields = ('content',)
+        fields = ('content', "id", "post",)
 
 ##### 좋아요 시리얼라이저
 class PostLikeSerializer(serializers.ModelSerializer):
