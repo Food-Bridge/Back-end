@@ -104,7 +104,6 @@ class CreateCommentAPIView(APIView):
 class DetailCommentAPIView(MutlipleFieldMixin, generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     queryset = Comment.objects.all()
-    lookup_field = ["post", "id"]
     serializer_class = CommentCreateUpdateSerializer
 
 class LikeAPIView(APIView):
