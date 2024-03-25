@@ -62,3 +62,11 @@ class RestaurantDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RestaurantSerializer
     queryset = Restaurant.objects.all()
+    
+class RestaurantReviewAPIView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ReviewSerializer
+    
+    def get_queryset(self):
+        restaurant_id = self.kwargs['pk']
+        return Review.objects.filter(restaurant_id=restaurant_id)
