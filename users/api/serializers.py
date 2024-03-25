@@ -30,10 +30,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         required=True,
         validators=[UnicodeUsernameValidator()],
     )
+    is_seller = serializers.BooleanField(default=False)
 
     class Meta:
         model   = User
-        fields  = ['email', 'username', 'password', 'password2', 'phone_number', 'is_seller']
+        fields  = ['email', 'username', 'password', 'password2', 'phone_number', 'is_seller',]
     
     def validate(self, attrs):
         username = attrs.get('username', '')
@@ -59,7 +60,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data['email'],
             phone_number=validated_data['phone_number'],
-            is_seller=validated_data['is_seller']
+            is_seller=validated_data['is_seller'],
         )
         user.set_password(validated_data['password'])
         user.save()
@@ -69,6 +70,7 @@ class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=3)
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
     tokens = serializers.SerializerMethodField()
+    is_seller = serializers.BooleanField(required=True)
 
     def get_tokens(self, obj):
         user = User.objects.get(email=obj['email'])
@@ -79,7 +81,7 @@ class LoginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['password', 'email', 'tokens']
+        fields = ['password', 'email', 'tokens', 'is_seller']
 
     def validate(self, attrs):
         email = attrs.get('email', '')
@@ -91,10 +93,16 @@ class LoginSerializer(serializers.ModelSerializer):
         if not user.is_active:
             raise serializers.ValidationError({'message' : 'Account disabled, contact admin'})
         
+        validated_user = User.objects.get(email=email)
+        is_seller = validated_user.is_seller
+        if is_seller != attrs.get('is_seller'):
+            raise serializers.ValidationError({'message' : '사용자 정보가 올바르지 않습니다.'})
+
         return {
             'email': user.email,
             'username': user.username,
-            'tokens': user.tokens
+            'tokens': user.tokens,
+            'is_seller' : user.is_seller,
         }
 
 class LogoutSerializer(serializers.Serializer):

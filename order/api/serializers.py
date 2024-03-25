@@ -2,6 +2,7 @@ from rest_framework import serializers
 from order.models import Order
 
 class OrderSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField()
     restaurant_name = serializers.ReadOnlyField(source="restaurant.name")
     restaurant_image = serializers.ImageField(
         source="restaurant.image", read_only=True
@@ -22,6 +23,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
+            "id",
             "user", 
             "delivery_fee", 
             "restaurant_image", 
@@ -43,3 +45,4 @@ class OrderSerializer(serializers.ModelSerializer):
             "restaurant", 
             "order_id"
         ]
+
