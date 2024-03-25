@@ -9,10 +9,10 @@ from order.models import Order
 class Review(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="review")
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name="review")
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="review")
-    caption = models.CharField(max_length=300)
-    menu_name = models.CharField(max_length=100)
-    rating = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
+    order = models.OneToOneField(Order, on_delete=models.SET_NULL, related_name="review", null=True)
+    caption = models.CharField(max_length=300, default="")
+    menu_name = models.CharField(max_length=100, default="")
+    rating = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)], default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     like_count = models.PositiveIntegerField(default=0)
 
