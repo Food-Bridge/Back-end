@@ -1,9 +1,11 @@
 import requests
-from restaurant.api.serializers import RestaurantSerializer
-from restaurant.models import Restaurant
 from rest_framework import permissions, generics, status
 from rest_framework.response import Response
 
+from restaurant.api.serializers import RestaurantSerializer
+from restaurant.models import Restaurant
+from review.models import Review
+from review.api.serializers import ReviewSerializer
 from users.api.utils import geocode_address
 
 class RestaurantAPIView(generics.ListCreateAPIView):
