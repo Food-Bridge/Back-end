@@ -1,4 +1,4 @@
-from rest_framework import permissions, generics, status
+from rest_framework import permissions, generics, status, views, reverse
 from rest_framework.response import Response
 from django.utils import timezone
 from order.models import Order
@@ -6,6 +6,8 @@ from restaurant.models import Restaurant
 from coupon.models import Coupon
 from menu.models import Menu, MenuOption
 from order.api.serializers import OrderSerializer
+from order.api.utils import get_estimated_time
+from django.shortcuts import redirect
 
 class OrderAPIView(generics.ListCreateAPIView):
     """
@@ -147,12 +149,24 @@ class OrderAPIView(generics.ListCreateAPIView):
 
         if order_serializer.is_valid():
             order_serializer.save()
-            return Response(order_serializer.data, status=status.HTTP_201_CREATED)
+            id = order_serializer.instance.id
+            print(id)
+            return redirect(reverse('get_kakao_mobility', kwargs={'id' : id}))
         else:
             return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class OrderDetailAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = OrderSerializer
     queryset = Order.objects.all()
+
+class GetKakaoMobilityView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        order_id = kwargs.get('id')
+        if not order_id:
+            return Response({"error" : "주문 정보를 확인할 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+        response = get_estimated_time(order_id, request.user)
+        return Response(response)

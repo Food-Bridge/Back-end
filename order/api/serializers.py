@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from order.models import Order
+from users.models import Address
 
 class OrderSerializer(serializers.ModelSerializer):
+    id = serializers.ReadOnlyField()
     restaurant_name = serializers.ReadOnlyField(source="restaurant.name")
     restaurant_image = serializers.ImageField(
         source="restaurant.image", read_only=True
@@ -41,5 +43,11 @@ class OrderSerializer(serializers.ModelSerializer):
             "order_state_name", 
             "created_at", 
             "restaurant", 
-            "order_id"
+            "order_id",
+            "id",
         ]
+
+class PointSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['latitude', 'longitude', ]
