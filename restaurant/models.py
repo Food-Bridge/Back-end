@@ -25,6 +25,7 @@ class SubCategory(models.Model):
 
 
 class Restaurant(models.Model):
+    owner = models.ForeignKey("users.User", on_delete=models.CASCADE, verbose_name="매장 소유자", default="")
     name = models.CharField(max_length=255, verbose_name="매장 이름")
     address = models.CharField(max_length=255, verbose_name="매장 주소")
     phone_number_regex = RegexValidator(regex=r'^02?-?\d{3,4}-?\d{4}$')

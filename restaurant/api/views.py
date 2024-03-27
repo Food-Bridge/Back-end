@@ -42,6 +42,11 @@ class RestaurantAPIView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         # 유저가 판매자인지 여부 확인
         if request.user.is_authenticated and request.user.is_seller:
+            
+            existing_restaurant = Restaurant.objects.filter(owner=request.user).exists()
+            if existing_restaurant:
+                return Response({"error": "이미 등록한 매장이 있습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            
             serializer = self.get_serializer(data=request.data)
             if serializer.is_valid():
                 data = serializer.validated_data
@@ -53,6 +58,8 @@ class RestaurantAPIView(generics.ListCreateAPIView):
                             data.update(geocoded_data)
                     except requests.exceptions.RequestException as e:
                         return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                data['owner'] = request.user.id
                 serializer.save(**data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             
