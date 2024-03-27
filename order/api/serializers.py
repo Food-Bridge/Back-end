@@ -40,7 +40,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "payment_method",
             "payment_method_name",
             "order_state", 
-            "order_state_name", 
+            "order_state_name",
+            "review_written",
             "created_at", 
             "restaurant", 
             "order_id"
