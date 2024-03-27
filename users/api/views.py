@@ -32,13 +32,10 @@ class RegisterAPIView(generics.GenericAPIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-
-            coupon, created = Coupon.objects.get_or_create(
-                code='USERSIGNUP',
-                content="회원가입 축하 쿠폰",
-                discount_price = 3000
-            )
-            UserCoupon.objects.create(user=user, coupon=coupon)
+            
+            # 회원가입 축하 쿠폰 지급
+            signup_coupon=Coupon.objects.get(id=1)
+            UserCoupon.objects.create(user=user, coupon=signup_coupon)
 
             token = TokenObtainPairSerializer.get_token(user)
             refresh_token = str(token)
