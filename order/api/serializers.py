@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from order.models import Order
 from users.models import Address
+from order.api.utils import get_estimated_time
 
 class OrderSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
@@ -20,7 +21,8 @@ class OrderSerializer(serializers.ModelSerializer):
     delivery_state_name = serializers.CharField(
         source='get_delivery_state_display', read_only=True
     )
-    
+    estimate_time = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
         fields = [
@@ -45,7 +47,14 @@ class OrderSerializer(serializers.ModelSerializer):
             "restaurant", 
             "order_id",
             "id",
+            "estimate_time"
         ]
+
+    def get_estimate_time(self, obj):
+        order_id = obj.id
+        user = obj.user
+        estimated_time_data = get_estimated_time(order_id, user)
+        return estimated_time_data
 
 class PointSerializer(serializers.ModelSerializer):
     class Meta:
