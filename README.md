@@ -14,6 +14,7 @@
 6. python manage.py createsuperuser 
     - 초기 데이터 입력
 7. python manage.py loaddata dummy.json
+   python manage.py loaddata coupon.json
     - 어드민 계정 생성
 8. python manage.py runserver
     - localhost:8000으로 지정되어 서버 실행됨
