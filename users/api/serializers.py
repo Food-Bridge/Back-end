@@ -15,6 +15,7 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken, TokenErro
 
 from users.api.utils import generate_access_token, decode_access_token
 from users.models import User, Address, Profile
+from restaurant.models import Restaurant
 
 from phonenumber_field.modelfields import PhoneNumberField
 import phonenumbers
@@ -71,6 +72,7 @@ class LoginSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
     tokens = serializers.SerializerMethodField()
     is_seller = serializers.BooleanField(required=True)
+    owner = serializers.SerializerMethodField()
 
     def get_tokens(self, obj):
         user = User.objects.get(email=obj['email'])
@@ -78,10 +80,15 @@ class LoginSerializer(serializers.ModelSerializer):
             'refresh': user.tokens()['refresh'],
             'access': user.tokens()['access']
         }
-
+        
+    def get_owner(self, obj):
+        user = User.objects.get(email=obj['email'])
+        restaurants = Restaurant.objects.filter(owner=user) # 매장 찾기
+        return [restaurant.id for restaurant in restaurants] # 여러 매장을 가질 수 있다고 가정
+    
     class Meta:
         model = User
-        fields = ['password', 'email', 'tokens', 'is_seller']
+        fields = ['password', 'email', 'tokens', 'is_seller', 'owner']
 
     def validate(self, attrs):
         email = attrs.get('email', '')
