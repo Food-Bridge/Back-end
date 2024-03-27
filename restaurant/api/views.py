@@ -59,7 +59,7 @@ class RestaurantAPIView(generics.ListCreateAPIView):
                     except requests.exceptions.RequestException as e:
                         return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
                     
-                data['owner'] = request.user.id
+                data['owner'] = request.user
                 serializer.save(**data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             
