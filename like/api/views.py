@@ -5,6 +5,8 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from .serializers import LikeSerializer
 from ..models import RestaurantLike
+from restaurant.models import Restaurant
+from django.db.models import F
 
 class LikeAPIView(views.APIView):
     permission_classes = (IsAuthenticated,)  
@@ -27,12 +29,14 @@ class LikeCreateAPIView(views.APIView):
             existing_like = RestaurantLike.objects.filter(user=user, restaurant_id=restaurant_id).first()
             if existing_like:
                 # 이미 좋아요를 누른 경우 좋아요 취소
+                Restaurant.objects.filter(pk=restaurant_id).update(bookmarkCount=F('bookmarkCount') - 1)
                 existing_like.delete()
                 return Response({'message': 'Restaurant like cancelled successfully.'}, status=status.HTTP_204_NO_CONTENT)
             else:
                 # 좋아요 등록
                 like = RestaurantLike(user=user, restaurant_id=restaurant_id)
                 like.save()
+                Restaurant.objects.filter(pk=restaurant_id).update(bookmarkCount=F('bookmarkCount') + 1)
                 return Response({'message': 'Restaurant liked successfully.'}, status=status.HTTP_201_CREATED)
         else:
             return Response({'message': 'Restaurant ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
