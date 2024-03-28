@@ -27,20 +27,18 @@ class ReviewSerializer(serializers.ModelSerializer):
 class ReviewCreateSerializer(serializers.ModelSerializer):
     _img = ReviewImageSerializer(many=True, source="img", read_only=True)
     img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True)
+    caption = serializers.CharField()
+    rating = serializers.IntegerField()
 
     class Meta:
         model = Review
         fields = ("id", "user", "restaurant", "order", "caption", "rating", "created_at", "menu_name", "img", "_img")
         read_only_fields = ("user", "restaurant", "order",)
-        examples = {
-            'id': 1,
-            'taste': 4,
-            'amount': 3,
-            'delivery': 5,
-            'restaurant': 2,
-            'caption': '정말 맛이 없는걸!',
-            'menu_name': '양념치킨',
-        }
+
+    def validate_ratings(self, value):
+        if value < 0 or value > 5:
+            raise serializers.ValidationError("최소 1점 이상, 최대 5점 이하까지만 부여할 수 있습니다.")
+        return value
 
     def create(self, validated_data):
         images = validated_data.pop('img', None)
