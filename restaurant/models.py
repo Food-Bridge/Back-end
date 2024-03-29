@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.validators import MinValueValidator, MaxValueValidator
+from decimal import Decimal
 
 class MainCategory(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -42,7 +43,7 @@ class Restaurant(models.Model):
     orderCount = models.PositiveIntegerField(default=0, verbose_name="주문수")
     reviewCount = models.PositiveIntegerField(default=0, verbose_name="리뷰수")
     bookmarkCount = models.PositiveIntegerField(default=0, verbose_name="즐겨찾기수")
-    rating = models.FloatField(default=0, validators=[MinValueValidator(0, 5), MaxValueValidator(5.0)])
+    averageRating = models.DecimalField(default=Decimal('0.00'), max_digits=3, decimal_places=2, validators=[MinValueValidator(0), MaxValueValidator(5.0)], verbose_name="식당 평점")
     packaging = models.BooleanField(default=False, verbose_name="포장 여부")
     status = models.BooleanField(default=False, verbose_name="매장 운영 여부")
     start = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0, 24), MaxValueValidator(24)], verbose_name="영업 시작 시간")
@@ -87,3 +88,5 @@ class Restaurant(models.Model):
 
     def __str__(self):
         return self.name
+
+    

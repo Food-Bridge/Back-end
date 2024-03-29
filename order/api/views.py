@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from datetime import datetime
 from order.api.serializers import OrderSerializer
 from users.api.utils import geocode_address
+from django.db.models import F
 
 class OrderAPIView(generics.ListCreateAPIView):
     """
@@ -156,6 +157,8 @@ class OrderAPIView(generics.ListCreateAPIView):
         if order_serializer.is_valid():
             # 주문 데이터가 유효한 경우
             order_instance = order_serializer.save()  # 주문을 저장하고 인스턴스를 반환합니다.
+            # 해당 식당의 주문 수 증가
+            Restaurant.objects.filter(pk=restaurant_id).update(orderCount=F('orderCount') + 1)
 
             # 배달 주소 위경도 처리
             if deliver_address:
