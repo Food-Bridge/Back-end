@@ -36,5 +36,10 @@ def geocode_address(address):
                         'latitude': float(documents[0]['y']),
                         'longitude': float(documents[0]['x']),
                     }
+                else:
+                    return {
+                        'latitude': 0,
+                        'longitude': 0,
+                    }
         except requests.exceptions.RequestException as e:
             raise Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
