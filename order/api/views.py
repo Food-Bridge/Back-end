@@ -1,20 +1,24 @@
 import requests
+
+from datetime import datetime
 from urllib.parse import urlparse
 from django.conf import settings
-from rest_framework import permissions, generics, status
-from rest_framework.response import Response
 from django.utils import timezone
+from django.db.models import F
+
 from order.models import Order
 from restaurant.models import Restaurant
 from coupon.models import Coupon
 from menu.models import Menu, MenuOption
-from rest_framework import permissions, generics, status, serializers
+
+from rest_framework import permissions, generics, status, views, reverse, serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from datetime import datetime
+
 from order.api.serializers import OrderSerializer
+from order.api.utils import get_estimated_time
 from users.api.utils import geocode_address
-from django.db.models import F
+from django.shortcuts import redirect
 
 class OrderAPIView(generics.ListCreateAPIView):
     """
@@ -155,6 +159,9 @@ class OrderAPIView(generics.ListCreateAPIView):
         order_serializer = OrderSerializer(data=order_data)
 
         if order_serializer.is_valid():
+            order_serializer.save()
+            return Response(order_serializer.data, status=status.HTTP_200_OK)
+
             # 주문 데이터가 유효한 경우
             order_instance = order_serializer.save()  # 주문을 저장하고 인스턴스를 반환합니다.
             # 해당 식당의 주문 수 증가
