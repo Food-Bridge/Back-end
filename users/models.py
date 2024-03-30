@@ -89,8 +89,14 @@ class Address(models.Model):
     jibun_address = models.CharField(max_length=255, blank=True, null=True)
     sigungu = models.CharField(max_length=255, blank=True, null=True)
     is_default = models.BooleanField(default=False)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    latitude = models.DecimalField(
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        null=True
+    )
+    longitude = models.DecimalField(
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        null=True
+    )
 
     class Meta:
         constraints = [
