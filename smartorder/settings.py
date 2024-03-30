@@ -9,23 +9,17 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
+import os
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url
 from dotenv import load_dotenv
 
 load_dotenv() 
-import os
-import json
-import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 ROOT_DIR = os.path.dirname(BASE_DIR)
-SECRET_BASE_FILE = os.path.join(BASE_DIR, 'secrets.json')
-secrets = json.loads(open(SECRET_BASE_FILE).read())
-for key, value in secrets.items():
-    setattr(sys.modules[__name__], key, value)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -36,6 +30,7 @@ ALGORITHM = "HS256"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG')
+KAKAO_REST_API_KEY = os.environ.get('KAKAO_REST_API_KEY')
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'smartorder-api.fly.dev']
 CORS_ORIGIN_WHITELIST = [
@@ -233,18 +228,18 @@ WSGI_APPLICATION = 'smartorder.wsgi.application'
 
 
 # 일단 sqlite3 한 이유는 DB 삭제 후 재생성이 쉬워서...
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 # DATABASES = {
-#     'default': dj_database_url.config(
-#         default="'sqlite:///" + os.path.join('db.sqlite3')
-#     )
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
 # }
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default="'sqlite:///" + os.path.join('db.sqlite3')
+    )
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -293,6 +288,11 @@ PHONENUMBER_DB_FORMAT = 'NATIONAL' # Model Field 설정(Defulat=E164)
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_MANIFEST_STRICT = False
+WHITENOISE_ALLOW_ALL_ORIGINS = True
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
