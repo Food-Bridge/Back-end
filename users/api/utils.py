@@ -1,8 +1,10 @@
 import jwt
+import requests
+from urllib.parse import urlparse
 from django.conf import settings
-from coupon.models import Coupon
-from users_coupon.models import UserCoupon
+from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.response import Response
 
 def generate_access_token(user):
     payload = {
@@ -19,3 +21,20 @@ def decode_access_token(access_token):
         raise AuthenticationFailed('Token has expired, please log in again')
     except jwt.InvalidTokenError:
         raise AuthenticationFailed('Invalid token, please log in again')
+    
+def geocode_address(address):
+        KAKAO_REST_API_KEY = getattr(settings, 'KAKAO_REST_API_KEY')
+        url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
+        
+        try:
+            response = requests.get(urlparse(url).geturl(), headers={"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"})
+            if response.status_code == 200:
+                result = response.json()
+                documents = result.get('documents', [])
+                if documents:
+                    return {
+                        'latitude': float(documents[0]['y']),
+                        'longitude': float(documents[0]['x']),
+                    }
+        except requests.exceptions.RequestException as e:
+            raise Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)

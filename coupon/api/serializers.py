@@ -2,7 +2,6 @@ from rest_framework import serializers
 from coupon.models import Coupon
 
 class CouponSerializer(serializers.ModelSerializer):
-    status = serializers.SerializerMethodField()
     formatted_expiration_date = serializers.SerializerMethodField()
 
     class Meta:
@@ -13,7 +12,7 @@ class CouponSerializer(serializers.ModelSerializer):
             'content',
             'minimum_order_price',
             'discount_price',
-            'status',
+            'is_active',
             'formatted_expiration_date'
         ]
 

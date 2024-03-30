@@ -62,6 +62,9 @@ urlpatterns = [
     ##### 장바구니
     path('cart/', include('cart.api.urls')),
 
+    ##### 주문내역 리뷰
+    path('review/', include('review.api.urls')),
+
     ##### 유저가 보유하고 있는 쿠폰
     path('userscoupon/', include('users_coupon.api.urls')),
 ] 

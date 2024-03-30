@@ -26,6 +26,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
+            "id",
             "user", 
             "delivery_fee", 
             "restaurant_image", 
@@ -42,13 +43,15 @@ class OrderSerializer(serializers.ModelSerializer):
             "payment_method",
             "payment_method_name",
             "order_state", 
-            "order_state_name", 
+            "order_state_name",
+            "review_written",
             "created_at", 
             "restaurant", 
             "order_id",
             "id",
             "estimate_time"
         ]
+
 
     def get_estimate_time(self, obj):
         order_id = obj.id

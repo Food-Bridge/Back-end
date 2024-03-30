@@ -1,12 +1,23 @@
-from rest_framework import permissions, generics, status, views, reverse
-from rest_framework.response import Response
+import requests
+
+from datetime import datetime
+from urllib.parse import urlparse
+from django.conf import settings
 from django.utils import timezone
+from django.db.models import F
+
 from order.models import Order
 from restaurant.models import Restaurant
 from coupon.models import Coupon
 from menu.models import Menu, MenuOption
+
+from rest_framework import permissions, generics, status, views, reverse, serializers
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
+
 from order.api.serializers import OrderSerializer
 from order.api.utils import get_estimated_time
+from users.api.utils import geocode_address
 from django.shortcuts import redirect
 
 class OrderAPIView(generics.ListCreateAPIView):
@@ -150,7 +161,26 @@ class OrderAPIView(generics.ListCreateAPIView):
         if order_serializer.is_valid():
             order_serializer.save()
             return Response(order_serializer.data, status=status.HTTP_200_OK)
+
+            # 주문 데이터가 유효한 경우
+            order_instance = order_serializer.save()  # 주문을 저장하고 인스턴스를 반환합니다.
+            # 해당 식당의 주문 수 증가
+            Restaurant.objects.filter(pk=restaurant_id).update(orderCount=F('orderCount') + 1)
+
+            # 배달 주소 위경도 처리
+            if deliver_address:
+                try:
+                    geocoded_data = geocode_address(deliver_address)
+                    if geocoded_data:
+                        order_instance.latitude = geocoded_data.get('latitude')
+                        order_instance.longitude = geocoded_data.get('longitude')
+                        order_instance.save()
+                except requests.exceptions.RequestException as e:
+                    return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(order_serializer.data, status=status.HTTP_201_CREATED)
         else:
+            # 주문 데이터가 유효하지 않은 경우
             return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class OrderDetailAPIView(generics.RetrieveUpdateAPIView):
