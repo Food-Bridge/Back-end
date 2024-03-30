@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv() 
 import os
 import json
 import sys
@@ -27,13 +31,19 @@ for key, value in secrets.items():
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-vw1g(1+hfdy-+!!gz!=*bh4zud2f!$9ld6#jizvb6v74jrgtr3'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 ALGORITHM = "HS256"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'smartorder-api.fly.dev']
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'https://smartorder-api.fly.dev',
+]
+
 
 
 # Application definition
@@ -88,6 +98,9 @@ INSTALLED_APPS = [
 
     ##### django-apscheduler
     'django_apscheduler',
+
+    ##### whitenoise
+    'whitenoise.runserver_nostatic', # whitenoise
 ]
 
 ##### django-apscheduler
@@ -104,6 +117,7 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', #whitenoise
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -195,10 +209,6 @@ CORS_ALLOW_HEADERS = (
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-]
 
 TEMPLATES = [
     {
@@ -223,24 +233,18 @@ WSGI_APPLICATION = 'smartorder.wsgi.application'
 
 
 # 일단 sqlite3 한 이유는 DB 삭제 후 재생성이 쉬워서...
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'mysql',
-#         'USER': 'root',
-#         'PASSWORD': '0000',
-#         'HOST': '127.0.0.1',
-#         'PORT': '3306',
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
 
+DATABASES = {
+    'default': dj_database_url.config(
+        default="'sqlite:///" + os.path.join('db.sqlite3')
+    )
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
