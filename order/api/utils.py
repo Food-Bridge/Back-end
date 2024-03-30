@@ -28,14 +28,14 @@ def get_estimated_time(order_id, user):
     try:
         order = Order.objects.get(id=order_id)
     except Order.DoesNotExist:
-        return {"error" : "주문 내역이 없습니다."}
+        return Response({"error": "주문 내역이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
     try:
         # 주문의 식당 정보를 출발지로 설정
         origin_latitude = order.restaurant.latitude
         origin_longitude = order.restaurant.longitude
     except Restaurant.DoesNotExist:
-        return {"error" : "주문에 대한 식당 정보를 찾을 수 없습니다."}
+        return Response({"error": "주문에 대한 식당 정보를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
     try:
         # 사용자가 등록한 기본 주소를 도착지로 설정
@@ -43,8 +43,8 @@ def get_estimated_time(order_id, user):
         destination_latitude = default_address.latitude
         destination_longitude = default_address.longitude
     except Address.DoesNotExist:
-        return {"error" : "기본 주소지로 등록된 주소가 없습니다."}
-    
+        return Response({"error": "기본 주소지로 등록된 주소가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
     # 음식점별 조리 시간이 필요할 것으로 보임(일단은 접수 후 바로 출발하는 것으로 가정)
     departure_time = datetime.now().strftime("%Y%m%d%H%M")
     origin = origin_longitude, origin_latitude
@@ -59,15 +59,15 @@ def get_estimated_time(order_id, user):
         'Content-Type': 'application/json'
     }
     data = {
-        "departure_time" : departure_time,
-        "origin" : origin,
-        "destination" : destination,
-        "priority" : priority,
-        "car_type" : car_type,
+        "departure_time": departure_time,
+        "origin": origin,
+        "destination": destination,
+        "priority": priority,
+        "car_type": car_type,
     }
     response = requests.get('https://apis-navi.kakaomobility.com/v1/future/directions', headers=headers, params=data)
     if response.status_code == 200:
         info = response.json()
-        return info
+        return Response(info, status=status.HTTP_200_OK)
     else:
-        return {"error": "카카오 모빌리티 API 호출에 실패했습니다."}
+        return Response({"error": "카카오 모빌리티 API 호출에 실패했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
