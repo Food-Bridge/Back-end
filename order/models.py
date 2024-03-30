@@ -55,7 +55,8 @@ class Order(models.Model):
         verbose_name="주문서 상태",
         max_length=16
     )
-    
+
+    # DecimalField
     latitude = models.DecimalField(
         max_digits=9,
         decimal_places=6,
