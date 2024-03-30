@@ -22,6 +22,7 @@ from users.api.serializers import (
     SocialLoginSerializer,
     UserSerializer
     )
+from users.api.utils import geocode_address
 from allauth.socialaccount.models import SocialAccount
 
 class RegisterAPIView(generics.GenericAPIView):
@@ -31,9 +32,10 @@ class RegisterAPIView(generics.GenericAPIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-
-            coupon, created = Coupon.objects.get_or_create(code='회원가입 축하 쿠폰')
-            UserCoupon.objects.create(user=user, coupon=coupon)
+            
+            # 회원가입 축하 쿠폰 지급
+            signup_coupon=Coupon.objects.get(id=1)
+            UserCoupon.objects.create(user=user, coupon=signup_coupon)
 
             token = TokenObtainPairSerializer.get_token(user)
             refresh_token = str(token)
@@ -111,30 +113,13 @@ class UserAddressAPIView(generics.ListCreateAPIView):
         if 'detail_address' in data:
             try:
                 address = data['detail_address']
-                geocoded_data = self.geocode_address(address)
+                geocoded_data = geocode_address(address)
                 if geocoded_data:
                     data.update(geocoded_data)
             except requests.exceptions.RequestException as e:
                 return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
         serializer.save(**data)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def geocode_address(self, address):
-        KAKAO_REST_API_KEY = getattr(settings, 'KAKAO_REST_API_KEY')
-        url = f"https://dapi.kakao.com/v2/local/search/address.json?query={address}"
-        
-        try:
-            response = requests.get(urlparse(url).geturl(), headers={"Authorization": f"KakaoAK {KAKAO_REST_API_KEY}"})
-            if response.status_code == 200:
-                result = response.json()
-                documents = result.get('documents', [])
-                if documents:
-                    return {
-                        'latitude': float(documents[0]['y']),
-                        'longitude': float(documents[0]['x']),
-                    }
-        except requests.exceptions.RequestException as e:
-            raise Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserAddressDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AddressSerializer

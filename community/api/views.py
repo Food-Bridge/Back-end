@@ -30,14 +30,16 @@ class ListPostAPIView(generics.ListAPIView):
     pagination_class = PostLimitOffsetPagination
 
 class CreatePostAPIView(APIView):
-    queryset = Blog.objects.all()
+    queryset = Blog.objects.all()   
     serializer_class = PostCreateUpdateSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         user_id = request.user.id
-        request.data['author'] = user_id
-        serializer = PostCreateUpdateSerializer(data=request.data, context={'request': request})
+        mutable_data = request.data.copy()
+        mutable_data['author'] = user_id
+        serializer = PostCreateUpdateSerializer(data=mutable_data, context={'request': request})
+        
         if serializer.is_valid(raise_exception=True):
             serializer.save(author_id=user_id)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -74,7 +76,6 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
                 response.set_cookie(user_cookie_key, f'{pk}', expires=expires)
                 instance.views += 1
                 instance.save()
-        print(cookies)
         return response
 
 class ListCommentAPIView(APIView):
@@ -103,7 +104,6 @@ class CreateCommentAPIView(APIView):
 class DetailCommentAPIView(MutlipleFieldMixin, generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     queryset = Comment.objects.all()
-    lookup_field = ["post", "id"]
     serializer_class = CommentCreateUpdateSerializer
 
 class LikeAPIView(APIView):
@@ -141,8 +141,6 @@ class DailyPopularPostAPIView(APIView):
 
         start_of_daily = end_of_yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_daily = end_of_yesterday.replace(hour=23, minute=59, second=59, microsecond=0)
-        print(start_of_daily)
-        print(end_of_daily)
 
         popular_posts = Blog.objects.filter(created_at__range=[start_of_daily, end_of_daily])
         popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))

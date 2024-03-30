@@ -2,18 +2,23 @@ from django.db import models
 from users.models import User
 from restaurant.models import Restaurant
 from menu.models import Menu
+from coupon.models import Coupon
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+
+    review_written = models.BooleanField(default=False)
     
+    coupon_code = models.ForeignKey(Coupon, blank=True, null=True, on_delete=models.SET_NULL)
     order_id = models.CharField(blank=True, null=True, max_length=50) # 주문 번호
     menu_list = models.JSONField(blank=True, default=dict) # 메뉴
     option_list = models.JSONField(blank=True, null=True) # 옵션
     
     total_price = models.PositiveIntegerField(default=0)  # 주문의 총 가격
     deliveryman_request = models.TextField(blank=True, null=True) # 배송기사 요청
-    required_options_count = models.PositiveIntegerField(default=1) 
+    required_options_count = models.PositiveIntegerField(default=1) # 필수 메뉴 개수
     
     PAYMENT_METHOD_CHOICES = [
         ('credit_card', '신용 카드'),
@@ -50,5 +55,19 @@ class Order(models.Model):
         verbose_name="주문서 상태",
         max_length=16
     )
+    
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+        null=True
+    )
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+        null=True
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

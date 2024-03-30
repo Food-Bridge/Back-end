@@ -2,12 +2,19 @@ from rest_framework import serializers
 from coupon.models import Coupon
 
 class CouponSerializer(serializers.ModelSerializer):
-    status = serializers.SerializerMethodField()
     formatted_expiration_date = serializers.SerializerMethodField()
 
     class Meta:
         model = Coupon
-        fields = ['id', 'name', 'content', 'minimum_order_price', 'discount_price', 'status', 'formatted_expiration_date']
+        fields = [
+            'id',
+            'code',
+            'content',
+            'minimum_order_price',
+            'discount_price',
+            'is_active',
+            'formatted_expiration_date'
+        ]
 
     ##### 쿠폰 만료 상태
     def get_status(self, obj):

@@ -54,4 +54,5 @@ class RestaurantSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Restaurant
-        exclude = ('minDeliveryTime', 'maxDeliveryTime')
+        read_only_fields = ('owner',)
+        exclude = ('minDeliveryTime', 'maxDeliveryTime', 'latitude', 'longitude')
