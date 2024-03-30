@@ -58,14 +58,10 @@ class Order(models.Model):
 
     # DecimalField
     latitude = models.DecimalField(
-        max_digits=9,
-        decimal_places=6,
         validators=[MinValueValidator(-90), MaxValueValidator(90)],
         null=True
     )
     longitude = models.DecimalField(
-        max_digits=9,
-        decimal_places=6,
         validators=[MinValueValidator(-180), MaxValueValidator(180)],
         null=True
     )
