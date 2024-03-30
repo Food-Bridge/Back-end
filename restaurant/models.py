@@ -38,8 +38,6 @@ class Restaurant(models.Model):
     
     minDeliveryTime = models.PositiveSmallIntegerField(default=0, verbose_name="최소 배달 시간")
     maxDeliveryTime = models.PositiveSmallIntegerField(default=0, verbose_name="최대 배달 시간") 
-    latitude = models.FloatField()
-    longitude = models.FloatField()
     
     minPickupTime = models.PositiveIntegerField(default=0, null=True, verbose_name="최소 픽업 시간")
     orderCount = models.PositiveIntegerField(default=0, verbose_name="주문수")
