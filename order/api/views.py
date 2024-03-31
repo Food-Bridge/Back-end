@@ -22,16 +22,20 @@ from django.shortcuts import redirect
 
 class OrderAPIView(generics.ListCreateAPIView):
     """
+    - user 값 넣지 않아도, 요청한 유저의 주문으로 들어감
     1. menu_list : 메뉴 리스트
     2. option_list : 옵션 리스트
+    2-1. sopttion_list : 선택 옵션 리스트
     3. total_price : 최종 금액
     4. deliveryman_request : 배송시 요청 사항
     5. required_options_count : 최소 필수 주문 개수
     6. payment_method : credit_card, cash
     7. restaurant : 레스토랑 id
-    8. coupon_code : 쿠폰코드
+    8. coupon_code : 쿠폰코드 (없을 경우 null로)
+    9. restaurant_request : 매장 요청 사항
+    10. disposable_request : 일회용품 요청
     
-    메뉴 2개, 옵션 2개 이상일 경우의 예
+    메뉴 1개, 옵션 1개, 선택옵션 1개 이상일 경우의 예
     ```
     "deliver_address" : "배달 주소",
     "coupon_code": "USERSIGNUP",
@@ -50,6 +54,14 @@ class OrderAPIView(generics.ListCreateAPIView):
             "option_name": "소스 추가",
             "price": 1000,
             "quantity": 1
+        }
+    ],
+    "soption_list": [
+        { 
+            "option_id" : 1, 
+            "option_name" :"사이드",
+            "price" : 1000,
+            "quantity" : 1 
         }
     ],
     "name": "양념 치킨",
@@ -197,6 +209,6 @@ class OrderAPIView(generics.ListCreateAPIView):
             return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class OrderDetailAPIView(generics.RetrieveUpdateAPIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = OrderSerializer
     queryset = Order.objects.all()

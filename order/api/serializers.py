@@ -47,6 +47,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "coupon_code",
             "deliver_address",
             "deliveryman_request",
+            "restaurant_request",
+            "disposable_request",
             "is_deliver",
             "delivery_state_name",
             "payment_method",
