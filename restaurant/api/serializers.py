@@ -14,8 +14,8 @@ class SubCategorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class RestaurantSerializer(serializers.ModelSerializer):
-    minDeliveryTimeMinutes = serializers.SerializerMethodField()
-    maxDeliveryTimeMinutes = serializers.SerializerMethodField()
+    minDeliveryTimeMinutes = serializers.IntegerField(source='minDeliveryTime')
+    maxDeliveryTimeMinutes = serializers.IntegerField(source='maxDeliveryTime')
     
     mainCategory_name = serializers.SerializerMethodField()
     subCategory_name = serializers.SerializerMethodField()
