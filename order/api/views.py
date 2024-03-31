@@ -91,7 +91,6 @@ class OrderAPIView(generics.ListCreateAPIView):
         menu_data = request.data.get('menu_list', [])  # 메뉴 데이터 가져오기
         option_data = request.data.get('option_list', [])  # 옵션 데이터 가져오기
         soption_data = request.data.get('soption_list', []) # 선택 옵션 데이터 가져오기
-        required_options_count = request.data.get('required_options_count') # 필수 옵션 개수 가져오기
         coupon_code = request.data.get('coupon_code') # 쿠폰 코드 가져오기
         deliver_address = request.data.get('deliver_address') # 배달 주소 가져오기
 
@@ -110,14 +109,8 @@ class OrderAPIView(generics.ListCreateAPIView):
         total_price = 0
         order_id = timezone.now().strftime("%Y%m%d%H") + "_" + str(user.id)
 
-        if required_options_count is None:
-            return Response({'error': "필수 주문 값을 받지 못했습니다."}, status=status.HTTP_400_BAD_REQUEST)
-
         if len(menu_data) == 0:
             return Response({'error': "필수 주문 데이터가 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if required_options_count > len(menu_data) :
-            return Response({'error': "필수 주문 데이터가  부족합니다."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 메뉴 데이터 처리
         for menu_item in menu_data:
@@ -197,6 +190,8 @@ class OrderAPIView(generics.ListCreateAPIView):
                 try:
                     geocoded_data = geocode_address(deliver_address)
                     if geocoded_data:
+                        if geocoded_data['latitude'] == 127:
+                            return Response({'erro': "배달 주소를 다시 입력해주세요"}, status=status.HTTP_400_BAD_REQUEST)
                         order_instance.latitude = geocoded_data.get('latitude')
                         order_instance.longitude = geocoded_data.get('longitude')
                         order_instance.save()
