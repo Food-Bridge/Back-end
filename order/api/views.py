@@ -8,6 +8,7 @@ from django.db.models import F
 
 from order.models import Order
 from restaurant.models import Restaurant
+from users.models import Address
 from coupon.models import Coupon
 from menu.models import Menu, MenuOption, MenuSelectedOption
 
@@ -96,6 +97,13 @@ class OrderAPIView(generics.ListCreateAPIView):
 
         # 현재 사용자 정보 가져오기
         user = request.user
+        
+        try:
+            # 유저의 기본 주소 여부 확인
+            user = Address.objects.get(user=user.id, is_default=True)
+        except Address.DoesNotExist:
+            return Response({'error': '유저의 기본 주소가 등록되지 않았습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            
 
         # 주문할 음식점이 유효한지 확인
         try:
