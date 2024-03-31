@@ -18,16 +18,16 @@ class OrderSerializer(serializers.ModelSerializer):
         source='get_order_state_display', read_only=True
     )
     
-    delivery_state_name = serializers.CharField(
-        source='get_delivery_state_display', read_only=True
-    )
+    delivery_state_name = serializers.CharField(source='get_delivery_state_display', read_only=True)
+    phonenumber = serializers.ReadOnlyField(source="user.phone_number", read_only=True)
     # estimate_time = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = [
             "id",
-            "user", 
+            "user",
+            "phonenumber",
             "delivery_fee", 
             "restaurant_image", 
             "restaurant_name", 
