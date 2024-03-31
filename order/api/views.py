@@ -159,9 +159,6 @@ class OrderAPIView(generics.ListCreateAPIView):
         order_serializer = OrderSerializer(data=order_data)
 
         if order_serializer.is_valid():
-            order_serializer.save()
-            return Response(order_serializer.data, status=status.HTTP_200_OK)
-
             # 주문 데이터가 유효한 경우
             order_instance = order_serializer.save()  # 주문을 저장하고 인스턴스를 반환합니다.
             # 해당 식당의 주문 수 증가
