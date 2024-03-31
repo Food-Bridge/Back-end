@@ -39,7 +39,6 @@ class OrderSerializer(serializers.ModelSerializer):
             "delivery_fee", 
             "restaurant_image", 
             "restaurant_name", 
-            "required_options_count", 
             "menu_list", 
             "option_list",
             'soption_list',

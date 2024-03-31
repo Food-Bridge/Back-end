@@ -21,7 +21,6 @@ class Order(models.Model):
     deliveryman_request = models.TextField(blank=True, null=True) # 배송기사 요청
     restaurant_request = models.TextField(blank=True, null=True) # 매장 요청
     disposable_request = models.BooleanField(default=True) # 일회용품 요청
-    required_options_count = models.PositiveIntegerField(default=1) # 필수 메뉴 개수
     
     PAYMENT_METHOD_CHOICES = [
         ('credit_card', '신용 카드'),
