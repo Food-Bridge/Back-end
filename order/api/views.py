@@ -9,7 +9,7 @@ from django.db.models import F
 from order.models import Order
 from restaurant.models import Restaurant
 from coupon.models import Coupon
-from menu.models import Menu, MenuOption
+from menu.models import Menu, MenuOption, MenuSelectedOption
 
 from rest_framework import permissions, generics, status, views, reverse, serializers
 from rest_framework.exceptions import PermissionDenied
@@ -78,6 +78,7 @@ class OrderAPIView(generics.ListCreateAPIView):
         restaurant_id = request.data.get('restaurant')
         menu_data = request.data.get('menu_list', [])  # 메뉴 데이터 가져오기
         option_data = request.data.get('option_list', [])  # 옵션 데이터 가져오기
+        soption_data = request.data.get('soption_list', []) # 선택 옵션 데이터 가져오기
         required_options_count = request.data.get('required_options_count') # 필수 옵션 개수 가져오기
         coupon_code = request.data.get('coupon_code') # 쿠폰 코드 가져오기
         deliver_address = request.data.get('deliver_address') # 배달 주소 가져오기
@@ -93,6 +94,7 @@ class OrderAPIView(generics.ListCreateAPIView):
         # 메뉴와 옵션을 저장할 리스트 초기화
         menus = []
         options = []
+        soptions = []
         total_price = 0
         order_id = timezone.now().strftime("%Y%m%d%H") + "_" + str(user.id)
 
@@ -128,6 +130,19 @@ class OrderAPIView(generics.ListCreateAPIView):
                 total_price += option_price * option_quantity  # 옵션 가격과 수량을 곱하여 총 가격에 더함
             except MenuOption.DoesNotExist:
                 return Response({'error': '존재하지 않는 옵션이 주문되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 선택 옵션 데이터 처리
+        for option_item in soption_data:
+            option_id = option_item.get('option_id')
+            option_price = option_item.get('price')
+            option_quantity = option_item.get('quantity')
+            try:
+                option = MenuSelectedOption.objects.get(id=option_id)
+                soptions.append(option)
+                total_price += option_price * option_quantity  # 옵션 가격과 수량을 곱하여 총 가격에 더함
+            except MenuSelectedOption.DoesNotExist:
+                return Response({'error': '존재하지 않는 선택 옵션이 주문되었습니다'}, status=status.HTTP_400_BAD_REQUEST)
+
 
         # 쿠폰 코드가 유효한지 확인
         if coupon_code is not None:
@@ -154,6 +169,7 @@ class OrderAPIView(generics.ListCreateAPIView):
             'deliver_address' : deliver_address,
             'menu_list' : menu_data,
             'option_list' : option_data,
+            'soption_list' : soption_data,
             'order_id' : order_id
         }
         order_serializer = OrderSerializer(data=order_data)
