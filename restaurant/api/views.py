@@ -57,6 +57,8 @@ class RestaurantAPIView(generics.ListCreateAPIView):
                     try:
                         geocoded_data = geocode_address(address)
                         if geocoded_data:
+                            if geocoded_data['latitude'] == 127:
+                                return Response({'error' : '매장 주소를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
                             data.update(geocoded_data)
                     except requests.exceptions.RequestException as e:
                         return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
