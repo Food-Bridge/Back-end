@@ -5,12 +5,13 @@ from menu.models import Menu, MenuOption, MenuSelectedOption
 class MenuSelectedOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuSelectedOption
-        fields = "__all__"
+        exclude = ('menu',)
+        
 
 class MenuOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuOption
-        fields = "__all__"
+        exclude = ('menu',)
 
 class MenuSerializer(serializers.ModelSerializer):
     options = MenuOptionSerializer(many=True, read_only=True)

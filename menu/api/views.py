@@ -52,6 +52,16 @@ class MenuOptionListCreateAPIView(generics.ListCreateAPIView):
         get_object_or_404(Menu, pk=menu_id)
         
         return MenuOption.objects.filter(menu_id=menu_id)
+    
+    def perform_create(self, serializer):
+        res_id = self.kwargs.get('res_id')  # URL에서 'res_id' 가져오기
+        menu_id = self.kwargs.get('menu_id') # URL에서 'menu_id' 가져오기
+        
+        # 메뉴를 가져와서 옵션을 생성할 때 해당 메뉴와 연결
+        menu = get_object_or_404(Menu, pk=menu_id)
+        res = get_object_or_404(Restaurant, pk=res_id)
+        
+        serializer.save(menu=menu)
 
 class MenuOptionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -87,7 +97,17 @@ class MenuSOptionListCreateAPIView(generics.ListCreateAPIView):
         get_object_or_404(Menu, pk=menu_id)
         
         return MenuSelectedOption.objects.filter(menu_id=menu_id)
-
+    
+    def perform_create(self, serializer):
+        res_id = self.kwargs.get('res_id')  # URL에서 'res_id' 가져오기
+        menu_id = self.kwargs.get('menu_id') # URL에서 'menu_id' 가져오기
+        
+        # 메뉴를 가져와서 옵션을 생성할 때 해당 메뉴와 연결
+        menu = get_object_or_404(Menu, pk=menu_id)
+        res = get_object_or_404(Restaurant, pk=res_id)
+        
+        serializer.save(menu=menu)
+        
 class MenuSOptionRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
     레스토랑 ID와 메뉴 ID, 옵션 ID 활용하여 옵션 조회, 수정, 삭제 API
