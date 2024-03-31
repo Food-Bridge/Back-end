@@ -68,6 +68,6 @@ def get_estimated_time(order_id, user):
     response = requests.get('https://apis-navi.kakaomobility.com/v1/future/directions', headers=headers, params=data)
     if response.status_code == 200:
         info = response.json()
-        return Response(info, status=status.HTTP_200_OK)
+        return info
     else:
         return Response({"error": "카카오 모빌리티 API 호출에 실패했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

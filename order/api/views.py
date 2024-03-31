@@ -202,7 +202,9 @@ class OrderAPIView(generics.ListCreateAPIView):
                         order_instance.save()
                 except requests.exceptions.RequestException as e:
                     return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
-
+            
+            response = get_estimated_time(order_instance.id, user)
+            order_serializer.data['estimate_time'] = response
             return Response(order_serializer.data, status=status.HTTP_201_CREATED)
         else:
             # 주문 데이터가 유효하지 않은 경우
