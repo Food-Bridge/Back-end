@@ -18,7 +18,12 @@ class MenuListCreateAPIView(generics.ListCreateAPIView):
         get_object_or_404(Restaurant, pk=res_id)
         
         return Menu.objects.filter(restaurant_id=res_id)
-
+    
+    def perform_create(self, serializer):
+        res_id = self.kwargs.get('res_id')
+        restaurant = get_object_or_404(Restaurant, pk=res_id)
+        serializer.save(restaurant=restaurant)
+        
 class MenuRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
     레스토랑 ID와 메뉴 ID 활용하여 조회, 수정, 삭제 API
