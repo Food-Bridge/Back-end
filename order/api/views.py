@@ -100,11 +100,10 @@ class OrderAPIView(generics.ListCreateAPIView):
         
         try:
             # 유저의 기본 주소 여부 확인
-            user = Address.objects.get(user=user.id, is_default=True)
+            Address.objects.get(user=user.id, is_default=True)
         except Address.DoesNotExist:
             return Response({'error': '유저의 기본 주소가 등록되지 않았습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-            
-
+        
         # 주문할 음식점이 유효한지 확인
         try:
             restaurant = Restaurant.objects.get(id=restaurant_id)
@@ -206,8 +205,8 @@ class OrderAPIView(generics.ListCreateAPIView):
                 except requests.exceptions.RequestException as e:
                     return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
             
-            response = get_estimated_time(order_instance.id, user)
-            order_serializer.data['estimate_time'] = response
+            # response = get_estimated_time(order_instance.id, user)
+            # order_serializer.data['estimate_time'] = response
             return Response(order_serializer.data, status=status.HTTP_201_CREATED)
         else:
             # 주문 데이터가 유효하지 않은 경우
