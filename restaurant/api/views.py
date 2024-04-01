@@ -14,7 +14,7 @@ class RestaurantAPIView(generics.ListCreateAPIView):
     ```
     {
         "name": "string2",
-        "address": "서울 관악구 난곡로 21길 10",
+        "address": "서울 영등포구 영중로 15 (타임스퀘어)",
         "phone_number": "021334294",
         "description": "string",
         "minimumOrderPrice": 3000,
@@ -29,6 +29,8 @@ class RestaurantAPIView(generics.ListCreateAPIView):
         "start": 24,
         "end": 36,
         "operatingTime": "string",
+        "minDeliveryTimeMinutes" : 10,
+        "maxDeliveryTimeMinutes" : 30,
         "deliveryFee": 3000,
         "mainCategory": 1,
         "subCategory": null
@@ -55,6 +57,8 @@ class RestaurantAPIView(generics.ListCreateAPIView):
                     try:
                         geocoded_data = geocode_address(address)
                         if geocoded_data:
+                            if geocoded_data['latitude'] == 127:
+                                return Response({'error' : '매장 주소를 다시 확인해주세요.'}, status=status.HTTP_400_BAD_REQUEST)
                             data.update(geocoded_data)
                     except requests.exceptions.RequestException as e:
                         return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
