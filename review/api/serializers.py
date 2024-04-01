@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from order.models import Order
+from users.models import Profile
 from review.models import Review, ReviewImage, OwnerComment
 
 class ReviewImageSerializer(serializers.ModelSerializer):
@@ -18,10 +19,20 @@ class OwnerCommentSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     image = ReviewImageSerializer(many=True, source='img', read_only=True)
     review_written = serializers.BooleanField(source='order.review_written', read_only=True)
+    user_nickname = serializers.CharField(source='user.profile.nickname', read_only=True)
+    user_image = serializers.SerializerMethodField()
+
+    def get_user_image(self, obj):
+        user = obj.user
+        profile = user.profile
+        if profile.image:
+            return self.context['request'].build_absolute_uri(profile.image.url)
+        else:
+            return self.context['request'].build_absolute_uri(profile.image_original.url)
 
     class Meta:
         model = Review
-        fields = ('id', 'user', 'restaurant', 'order', 'caption', 'menu_name',
+        fields = ('id', 'user', 'user_nickname', 'user_image', 'restaurant', 'order', 'caption', 'menu_name',
                   'rating', 'created_at', 'like_count', 'image', 'review_written',)
 
 class ReviewCreateSerializer(serializers.ModelSerializer):
