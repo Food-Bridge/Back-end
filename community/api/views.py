@@ -129,7 +129,7 @@ class LatestPostsAPIView(APIView):
     permission_classes = [AllowAny]
     def get(self, request, *args, **kwargs):
         latest_posts = Blog.objects.all().order_by('-created_at')[:10]
-        serializer = PostListSerializer(latest_posts, many=True)
+        serializer = PostListSerializer(latest_posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class DailyPopularPostAPIView(APIView):
@@ -143,7 +143,7 @@ class DailyPopularPostAPIView(APIView):
         popular_posts = Blog.objects.filter(created_at__range=[start_of_today, end_of_today])
         popular_posts = popular_posts.annotate(comment_count=Count('comment'), like_users_count=Count('like_users'))
         popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
-        serializer = PopularPostSerializer(popular_posts, many=True)
+        serializer = PopularPostSerializer(popular_posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class WeekPopularPostAPIView(APIView):
@@ -161,5 +161,5 @@ class WeekPopularPostAPIView(APIView):
         popular_posts = Blog.objects.filter(created_at__range=[start_of_week, end_of_week])
         popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
         popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
-        serializer = PopularPostSerializer(popular_posts, many=True)
+        serializer = PopularPostSerializer(popular_posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)

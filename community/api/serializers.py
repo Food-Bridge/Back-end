@@ -49,15 +49,21 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
 class PostListSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
     weight_value = serializers.SerializerMethodField(read_only=True)
+    img = PostImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Blog
-        fields = "__all__"
+        fields = ("author", "title", "content", "created_at", "updated_at", "views", "img", "likes_count", "weight_value",)
 
     def get_likes_count(self, obj):
         return obj.like_users.count()
 
     def get_weight_value(self, obj):
         return obj.WeightMethod()
+    
+    def get_img(self, obj):
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.img.url)
 
 ##### GET/PUT/DELETE 요청(상세 보기 조회, 수정, 삭제) 시리얼라이저 - 요구사항 반영
 class PostDetailSerializer(serializers.ModelSerializer):
@@ -129,11 +135,19 @@ class PostLikeSerializer(serializers.ModelSerializer):
 
 ##### 인기 게시글 시리얼라이저
 class PopularPostSerializer(serializers.ModelSerializer):
+    likes_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField()
+    img = PostImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Blog
-        fields = "__all__"
+        fields = ("author", "title", "content", "created_at", "updated_at", "views", "img", "comment_count", "likes_count",)
+
+    def get_likes_count(self, obj):
+        return obj.like_users.count()
 
     def get_comment_count(self, obj):
-        return obj.comment.count()
+        return obj.get_comment_count()
+    
+    def get_img(self, obj):
+        return obj.image.url
