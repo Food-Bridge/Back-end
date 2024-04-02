@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Blog, Comment
+from ..models import Blog, Comment, BlogImage
 from users.models import User
 from django.conf import settings
 
@@ -9,13 +9,21 @@ class UserInfoSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', )
 
+class PostImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogImage
+        fields = ("id", "image",)
+
 ##### POST 요청(게시글 생성) 시리얼라이저 - 요구사항 반영
 class PostCreateUpdateSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.id")
+    _img = PostImageSerializer(many=True, source='img', read_only=True)
+    img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True, required=False)
 
     class Meta:
         model = Blog
-        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'image',)
+        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'img', '_img')
+        read_only_fields = ("author",)
 
     ##### 검증
     def validate_title(self, value):
@@ -28,7 +36,15 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         if len(value) == 0:
             return serializers.ValidationError("내용을 입력하지 않았습니다.")
         return value
- 
+
+    def create(self, validated_data):
+        images = validated_data.pop('img', None)
+        post = Blog.objects.create(**validated_data)
+        if images:
+            for image in images:
+                BlogImage.objects.create(blog=post, image=image)
+        return post
+
 ##### GET 요청(전체 게시글 조회) 시리얼라이저 - 요구사항 반영
 class PostListSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
