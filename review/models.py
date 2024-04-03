@@ -44,11 +44,3 @@ class ReviewImage(models.Model):
     """이미지 모델"""
     review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name="img")
     image = models.ImageField(upload_to="review_image")
-
-class OwnerComment(models.Model):
-    review = models.OneToOneField(Review, on_delete=models.CASCADE)
-    comments = models.CharField(max_length=300)
-    created = models.DateTimeField(auto_now_add=True)
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        super().save(force_insert, force_update, using, update_fields)
