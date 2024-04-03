@@ -70,6 +70,9 @@ def get_estimated_time(order_id, user):
         info = response.json()
         # summary의 duration(초 단위)값을 가져와 분으로 변환
         duration_minutes = info['routes'][0]['summary']['duration'] // 60
+        # 비교 주소 값이 정확하지 않아, 값을 구하지 못했을 경우 0으로 처리
+        if (duration_minutes is None) or (duration_minutes == 0):
+            return 0
         return duration_minutes
     else:
         return 0 #Response({"error": "카카오 모빌리티 API 호출에 실패했습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
