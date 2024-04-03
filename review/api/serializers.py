@@ -11,26 +11,42 @@ class ReviewSerializer(serializers.ModelSerializer):
     image = ReviewImageSerializer(many=True, source='img', read_only=True)
     review_written = serializers.BooleanField(source='order.review_written', read_only=True)
     user_nickname = serializers.CharField(source='user.profile.nickname', read_only=True)
-    user_image = serializers.SerializerMethodField()
-
+    user_image = serializers.SerializerMethodField(source='user.profile', read_only=True)
+    
+    restaurant_name = serializers.SerializerMethodField()
+    restaurant_image = serializers.SerializerMethodField()
+    
     def get_user_image(self, obj):
         user = obj.user
         profile = user.profile
-        if profile.image:
-            return self.context['request'].build_absolute_uri(profile.image.url)
-        else:
-            return self.context['request'].build_absolute_uri(profile.image_original.url)
+        request = self.context.get('request')
 
+        if profile.image_original and request:
+            return request.build_absolute_uri(profile.image_original.url)
+        elif profile.image and request:
+            return request.build_absolute_uri(profile.image.url)
+        else:
+            return None
+    
+    def get_restaurant_name(self, obj):
+        res = obj.restaurant
+        return res.name
+    
+    def get_restaurant_image(self, obj):
+        request = self.context.get('request')
+        res = obj.restaurant
+        return request.build_absolute_uri(res.image.url)
+    
     class Meta:
         model = Review
-        fields = ('id', 'user', 'user_nickname', 'user_image', 'restaurant', 'order', 'caption', 'menu_name',
-                  'rating', 'created_at', 'like_count', 'image', 'review_written',)
+        fields = ('id', 'user', 'user_nickname', 'user_image', 'restaurant', 'restaurant_name', 'restaurant_image',
+                  'order', 'caption', 'menu_name','rating', 'created_at', 'like_count', 'image', 'review_written',)
 
 class ReviewCreateSerializer(serializers.ModelSerializer):
     _img = ReviewImageSerializer(many=True, source="img", read_only=True)
-    img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True)
+    img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True, required=False)
     caption = serializers.CharField()
-    rating = serializers.IntegerField()
+    rating = serializers.DecimalField(max_digits=2, decimal_places=1)
 
     class Meta:
         model = Review
