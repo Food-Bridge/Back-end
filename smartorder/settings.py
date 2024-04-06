@@ -13,33 +13,35 @@ import os
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url
-from dotenv import load_dotenv
-
-load_dotenv() 
+import environ 
+from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 ROOT_DIR = os.path.dirname(BASE_DIR)
 
+env = environ.Env(  
+    DEBUG=(bool, False),
+)
+environ.Env.read_env(BASE_DIR / '.env')  # <-- Updated!
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = env.str('SECRET_KEY', default=get_random_secret_key())  # <-- Updated!
 ALGORITHM = "HS256"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG')
+DEBUG = env.str('DEBUG')  # <-- Updated!
 KAKAO_REST_API_KEY = os.environ.get('KAKAO_REST_API_KEY')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'smartorder-api.fly.dev']
+ALLOWED_HOSTS = ['127.0.0.1','foodbridge.vercel.app', 'smartorder-api.fly.dev']
+CSRF_TRUSTED_ORIGINS = ['https://smartorder-api.fly.dev']
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
+    'https://foodbridge.vercel.app',
     'https://smartorder-api.fly.dev',
 ]
-
-
 
 # Application definition
 
@@ -96,6 +98,7 @@ INSTALLED_APPS = [
 
     ##### whitenoise
     'whitenoise.runserver_nostatic', # whitenoise
+    'storages' # django-storage
 ]
 
 ##### django-apscheduler
@@ -236,9 +239,7 @@ WSGI_APPLICATION = 'smartorder.wsgi.application'
 # }
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default="'sqlite:///" + os.path.join('db.sqlite3')
-    )
+    'default': env.db('DATABASE_URL', default='postgres://postgres:postgres@localhost:5432/hello_django')
 }
 
 # Password validation
@@ -280,15 +281,42 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 PHONENUMBER_DEFAULT_FORMAT = 'NATIONAL' # Serializer Field 설정(Defulat=E164)
 PHONENUMBER_DB_FORMAT = 'NATIONAL' # Model Field 설정(Defulat=E164)
 
-STATIC_ROOT = BASE_DIR / 'static'
-STATIC_URL = '/static/'
+##### static 관련 설정
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
+
+##### s3 관련 설정
+USE_S3 = env('USE_S3') == 'TRUE'
+if USE_S3:
+    # aws settings
+    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = "nirvana-aws-bucket" #os.getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_DEFAULT_ACL = None
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com'
+    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    # s3 static settings
+    STATIC_LOCATION = 'static'
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{STATIC_LOCATION}/'
+    STATICFILES_STORAGE = 'smartorder.storage_backends.StaticStorage'
+    # s3 public media settings
+    PUBLIC_MEDIA_LOCATION = 'media'
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/'
+    DEFAULT_FILE_STORAGE = 'smartorder.storage_backends.PublicMediaStorage'
+else:
+    STATIC_URL = 'static/'
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_MANIFEST_STRICT = False
 WHITENOISE_ALLOW_ALL_ORIGINS = True
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
