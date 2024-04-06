@@ -135,13 +135,14 @@ class PostLikeSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'like_users', 'likes_count',)
 
 class PopularPostSerializer(serializers.ModelSerializer):
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField()
     img = PostImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Blog
-        fields = ("author", "title", "content", "created_at", "updated_at", "views", "img", "comment_count", "likes_count",)
+        fields = ("author", "title", "content", "created_at", "updated_at", "views", "img", "comment_count", "likes_count", "author_info",)
 
     def get_likes_count(self, obj):
         return obj.like_users.count()
