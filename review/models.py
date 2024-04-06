@@ -13,7 +13,7 @@ class Review(models.Model):
     order = models.OneToOneField(Order, on_delete=models.SET_NULL, related_name="review", null=True)
     caption = models.CharField(max_length=300, default="")
     menu_name = models.CharField(max_length=100, default="")
-    rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], default=1)
+    rating = models.DecimalField(decimal_places=1, max_digits=2, validators=[MinValueValidator(1), MaxValueValidator(5)], default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     like_count = models.PositiveIntegerField(default=0)
 
