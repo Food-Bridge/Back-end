@@ -9,36 +9,31 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-import os
 from pathlib import Path
 from datetime import timedelta
-import dj_database_url
-from dotenv import load_dotenv
-
-load_dotenv() 
+import os
+import json
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 ROOT_DIR = os.path.dirname(BASE_DIR)
+SECRET_BASE_FILE = os.path.join(BASE_DIR, 'secrets.json')
+secrets = json.loads(open(SECRET_BASE_FILE).read())
+for key, value in secrets.items():
+    setattr(sys.modules[__name__], key, value)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'django-insecure-vw1g(1+hfdy-+!!gz!=*bh4zud2f!$9ld6#jizvb6v74jrgtr3'
 ALGORITHM = "HS256"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG')
-KAKAO_REST_API_KEY = os.environ.get('KAKAO_REST_API_KEY')
+DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'smartorder-api.fly.dev']
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://smartorder-api.fly.dev',
-]
-
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -78,7 +73,6 @@ INSTALLED_APPS = [
     'users_coupon',
     'review',
     'search',
-    'order',
 
     ##### ModelField
     'phonenumber_field',
@@ -93,9 +87,6 @@ INSTALLED_APPS = [
 
     ##### django-apscheduler
     'django_apscheduler',
-
-    ##### whitenoise
-    'whitenoise.runserver_nostatic', # whitenoise
 ]
 
 ##### django-apscheduler
@@ -112,7 +103,6 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', #whitenoise
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -204,6 +194,10 @@ CORS_ALLOW_HEADERS = (
 
 CORS_ALLOW_CREDENTIALS = True
 
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+]
 
 TEMPLATES = [
     {
@@ -228,18 +222,24 @@ WSGI_APPLICATION = 'smartorder.wsgi.application'
 
 
 # 일단 sqlite3 한 이유는 DB 삭제 후 재생성이 쉬워서...
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'mysql',
+#         'USER': 'root',
+#         'PASSWORD': '0000',
+#         'HOST': '127.0.0.1',
+#         'PORT': '3306',
 #     }
 # }
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default="'sqlite:///" + os.path.join('db.sqlite3')
-    )
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -288,11 +288,6 @@ PHONENUMBER_DB_FORMAT = 'NATIONAL' # Model Field 설정(Defulat=E164)
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-WHITENOISE_USE_FINDERS = True
-WHITENOISE_MANIFEST_STRICT = False
-WHITENOISE_ALLOW_ALL_ORIGINS = True
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
