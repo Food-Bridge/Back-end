@@ -1,20 +1,11 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
-from order.models import Order
-from users.models import Profile
-from review.models import Review, ReviewImage, OwnerComment
+from review.models import Review, ReviewImage
 
 class ReviewImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReviewImage
         fields = ("id", "image",)
-
-class OwnerCommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OwnerComment
-        fields = ("id", "comments", "created", "review_id")
 
 class ReviewSerializer(serializers.ModelSerializer):
     image = ReviewImageSerializer(many=True, source='img', read_only=True)

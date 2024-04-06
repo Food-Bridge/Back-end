@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from order.models import Order
-from review.models import Review, OwnerComment
-from review.api.serializers import ReviewSerializer, ReviewCreateSerializer, OwnerCommentSerializer
+from review.models import Review
+from review.api.serializers import ReviewSerializer, ReviewCreateSerializer
 from rest_framework import permissions, generics, status, serializers, response
 from rest_framework.response import Response
 
