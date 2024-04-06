@@ -33,7 +33,6 @@ SECRET_KEY = env.str('SECRET_KEY', default=get_random_secret_key())  # <-- Updat
 ALGORITHM = "HS256"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.str('DEBUG')  # <-- Updated!
 KAKAO_REST_API_KEY = os.environ.get('KAKAO_REST_API_KEY')
 
 ALLOWED_HOSTS = ['127.0.0.1','foodbridge.vercel.app', 'smartorder-api.fly.dev']
