@@ -2,6 +2,8 @@ from rest_framework import serializers
 from ..models import Blog, Comment, BlogImage
 from users.models import Profile
 from users.models import User
+from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
 
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,7 +15,7 @@ class PostImageSerializer(serializers.ModelSerializer):
         model = BlogImage
         fields = ("id", "image",)
 
-class CommunityProfileSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
 
     class Meta:
@@ -21,15 +23,21 @@ class CommunityProfileSerializer(serializers.ModelSerializer):
         fields = ('user', 'nickname', 'image')
 
     def get_image(self, obj):
+        request = self.context.get('request')
         if obj.image:
-            request = self.context.get('request')
             return request.build_absolute_uri(obj.image.url)
         else:
-            request = self.context.get('request')
             return request.build_absolute_uri(obj.image_original.url)
 
+class CommenterSerializer(serializers.ModelSerializer):
+    author_profile = ProfileSerializer(source='author.profile', read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'content', 'created_at', 'author_profile')
+
 class PostCreateUpdateSerializer(serializers.ModelSerializer):
-    author_info = CommunityProfileSerializer(source="author.profile", read_only=True)
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
     author = serializers.ReadOnlyField(source="author.id", read_only=True)
     _img = PostImageSerializer(many=True, source='img', read_only=True)
     img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True, required=False)
@@ -58,14 +66,14 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         return post
 
 class PostListSerializer(serializers.ModelSerializer):
-    author_info = CommunityProfileSerializer(source="author.profile", read_only=True)
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     weight_value = serializers.SerializerMethodField(read_only=True)
     img = PostImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Blog
-        fields = ("author", "title", "content", "created_at", "updated_at", "views", "img", "likes_count", "weight_value", "author_info",)
+        fields = ("id", "author", "title", "content", "created_at", "updated_at", "views", "img", "likes_count", "weight_value", "author_info",)
 
     def get_likes_count(self, obj):
         return obj.like_users.count()
@@ -78,16 +86,19 @@ class PostListSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(obj.img.url)
 
 class PostDetailSerializer(serializers.ModelSerializer):
-    author_info = CommunityProfileSerializer(source="author.profile", read_only=True)
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     like_users = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)
-    image = PostImageSerializer(many=True, read_only=True)
-    author = serializers.ReadOnlyField(source="author.id")
+    _img = PostImageSerializer(many=True, source='img', read_only=True)
+    img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True)
+    comment_count = serializers.SerializerMethodField(read_only=True)
+    comments = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Blog
-        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'image', 'id', "author_info",)
+        fields = ('id', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'id', "author_info",
+                "img", "_img", "comment_count", "comments",)
     
     def get_likes_count(self, obj):
         return obj.like_users.count()
@@ -98,19 +109,24 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     def get_comment_count(self, obj):
         return obj.comment.count()
-
-    def get_image(self, obj):
+        
+    def get_img(self, obj):
         request = self.context.get('request')
-        return request.build_absolute_uri(obj.image.url)
+        return request.build_absolute_uri(obj.img.url)
+    
+    def get_comments(self, obj):
+        comments = obj.comment.all()
+        return CommentSerializer(comments, many=True).data
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source="author.id")
+    author_info = ProfileSerializer(source="user.profile", write_only=True)
+    author = serializers.ReadOnlyField(source="user.id")
     post = serializers.ReadOnlyField(source="post.id")
     id = serializers.ReadOnlyField()
 
     class Meta:
         model = Comment
-        fields = ("author", "id", "post", "content",)
+        fields = ("id", "post", "content", "author", "author_info",)
 
 class CommentCreateUpdateSerializer(serializers.ModelSerializer):
     post = serializers.ReadOnlyField(source="post.id")
@@ -135,14 +151,15 @@ class PostLikeSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'like_users', 'likes_count',)
 
 class PopularPostSerializer(serializers.ModelSerializer):
-    author_info = CommunityProfileSerializer(source="author.profile", read_only=True)
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
+    author = serializers.ReadOnlyField(source="author.id", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField()
     img = PostImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Blog
-        fields = ("author", "title", "content", "created_at", "updated_at", "views", "img", "comment_count", "likes_count", "author_info",)
+        fields = ("id", "author", "title", "content", "created_at", "updated_at", "views", "img", "comment_count", "likes_count", "author_info",)
 
     def get_likes_count(self, obj):
         return obj.like_users.count()

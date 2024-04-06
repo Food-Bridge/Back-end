@@ -11,8 +11,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
-from .permissions import IsOwnerOrReadOnly
-from ..models import Blog, Comment
+from .permissions import IsCommentOwner
+from ..models import Blog, Comment, BlogImage
 from community.api.serializers import (PostCreateUpdateSerializer, 
                                        PostListSerializer, 
                                        PostDetailSerializer, 
@@ -49,14 +49,14 @@ class CreatePostAPIView(APIView):
 class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Blog.objects.all()
     serializer_class = PostDetailSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, pk=None):
         instance = get_object_or_404(self.get_queryset(), pk=pk)
         tomorrow = datetime.datetime.replace(timezone.datetime.now(), hour=23, minute=59, second=0)
         expires = datetime.datetime.strftime(tomorrow, "%a, %d-%b-%Y %H:%M:%S GMT")
 
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request" : request})
         response = Response(serializer.data, status=status.HTTP_200_OK)
 
         if request.user.is_authenticated:
@@ -77,6 +77,20 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
                 instance.views += 1
                 instance.save()
         return response
+
+    
+    def put(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        images_data = request.FILES.getlist('img')
+        if images_data:
+            for image_data in images_data:
+                image = BlogImage.objects.create(blog=instance, image=image_data)
+                instance.img.add(image)
+        return self.update(request, *args, **kwargs)
 
 class ListCommentAPIView(APIView):
     serializer_class = CommentSerializer
@@ -102,7 +116,7 @@ class CreateCommentAPIView(APIView):
             return Response({"errors" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         
 class DetailCommentAPIView(MutlipleFieldMixin, generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsCommentOwner]
     queryset = Comment.objects.all()
     serializer_class = CommentCreateUpdateSerializer
 
