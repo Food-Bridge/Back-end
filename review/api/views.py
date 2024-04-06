@@ -23,9 +23,7 @@ class ReviewCreateAPIView(generics.ListCreateAPIView):
 class ReviewListAPIView(generics.ListAPIView):
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
+    
+    def get_queryset(self):
         user = self.request.user
-        reviews = Review.objects.filter(user=user).order_by("created_at")
-        serializer = self.serializer_class(reviews, many=True)
-        return Response(serializer.data)
+        return Review.objects.filter(user=user).order_by("created_at")
