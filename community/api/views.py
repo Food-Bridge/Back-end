@@ -11,8 +11,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
-from .permissions import IsOwnerOrReadOnly
-from ..models import Blog, Comment
+from .permissions import IsCommentOwner
+from ..models import Blog, Comment, BlogImage
 from community.api.serializers import (PostCreateUpdateSerializer, 
                                        PostListSerializer, 
                                        PostDetailSerializer, 
@@ -49,14 +49,14 @@ class CreatePostAPIView(APIView):
 class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Blog.objects.all()
     serializer_class = PostDetailSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, pk=None):
         instance = get_object_or_404(self.get_queryset(), pk=pk)
         tomorrow = datetime.datetime.replace(timezone.datetime.now(), hour=23, minute=59, second=0)
         expires = datetime.datetime.strftime(tomorrow, "%a, %d-%b-%Y %H:%M:%S GMT")
 
-        serializer = self.get_serializer(instance)
+        serializer = self.get_serializer(instance, context={"request" : request})
         response = Response(serializer.data, status=status.HTTP_200_OK)
 
         if request.user.is_authenticated:
@@ -77,6 +77,20 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
                 instance.views += 1
                 instance.save()
         return response
+
+    
+    def put(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        images_data = request.FILES.getlist('img')
+        if images_data:
+            for image_data in images_data:
+                image = BlogImage.objects.create(blog=instance, image=image_data)
+                instance.img.add(image)
+        return self.update(request, *args, **kwargs)
 
 class ListCommentAPIView(APIView):
     serializer_class = CommentSerializer
@@ -102,7 +116,7 @@ class CreateCommentAPIView(APIView):
             return Response({"errors" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         
 class DetailCommentAPIView(MutlipleFieldMixin, generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsCommentOwner]
     queryset = Comment.objects.all()
     serializer_class = CommentCreateUpdateSerializer
 
@@ -129,23 +143,21 @@ class LatestPostsAPIView(APIView):
     permission_classes = [AllowAny]
     def get(self, request, *args, **kwargs):
         latest_posts = Blog.objects.all().order_by('-created_at')[:10]
-        serializer = PostListSerializer(latest_posts, many=True)
+        serializer = PostListSerializer(latest_posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class DailyPopularPostAPIView(APIView):
     serializer_class = PopularPostSerializer
     permission_classes = [AllowAny]
     def get(self, request, *args, **kwargs):
-        start_of_today = timezone.localtime(timezone.now()).replace(hour=0, minute=0, second=0, microsecond=0)
-        end_of_yesterday = start_of_today - datetime.timedelta(seconds=1)
+        today = timezone.localtime(timezone.now())
+        start_of_today = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_today = today.replace(hour=23, minute=59, second=59, microsecond=0)
 
-        start_of_daily = end_of_yesterday.replace(hour=0, minute=0, second=0, microsecond=0)
-        end_of_daily = end_of_yesterday.replace(hour=23, minute=59, second=59, microsecond=0)
-
-        popular_posts = Blog.objects.filter(created_at__range=[start_of_daily, end_of_daily])
-        popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
+        popular_posts = Blog.objects.filter(created_at__range=[start_of_today, end_of_today])
+        popular_posts = popular_posts.annotate(comment_count=Count('comment'), like_users_count=Count('like_users'))
         popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
-        serializer = PopularPostSerializer(popular_posts, many=True)
+        serializer = PopularPostSerializer(popular_posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class WeekPopularPostAPIView(APIView):
@@ -163,5 +175,5 @@ class WeekPopularPostAPIView(APIView):
         popular_posts = Blog.objects.filter(created_at__range=[start_of_week, end_of_week])
         popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
         popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
-        serializer = PopularPostSerializer(popular_posts, many=True)
+        serializer = PopularPostSerializer(popular_posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)

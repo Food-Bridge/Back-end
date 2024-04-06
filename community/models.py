@@ -7,7 +7,6 @@ class Blog(models.Model):
     like_users = models.ManyToManyField(User, related_name='like_articles')
     title = models.CharField(max_length=50)
     content = models.TextField()
-    image = models.ImageField(upload_to="community/%Y/%m/%d")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     views = models.IntegerField(default=0)
@@ -21,11 +20,16 @@ class Blog(models.Model):
         except:
             None
 
-    def get_comment_count(self, obj):
-        return obj.get_comment_count()
+    def get_comment_count(self):
+        return self.comment.count()
     
-    def get_likes_count(self, obj):
-        return obj.like_users.count()
+    def get_likes_count(self):
+        return len(self.like_users)
+
+class BlogImage(models.Model):
+    """이미지 모델"""
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name="img")
+    image = models.ImageField(upload_to="community/%Y/%m/%d")
 
 class Comment(models.Model):
     post = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='comment')

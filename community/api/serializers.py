@@ -1,59 +1,104 @@
 from rest_framework import serializers
-from ..models import Blog, Comment
+from ..models import Blog, Comment, BlogImage
+from users.models import Profile
 from users.models import User
-from django.conf import settings
+from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
 
-##### 사용자 정보 시리얼라이저
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', )
 
-##### POST 요청(게시글 생성) 시리얼라이저 - 요구사항 반영
+class PostImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogImage
+        fields = ("id", "image",)
+
+class ProfileSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ('user', 'nickname', 'image')
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            return request.build_absolute_uri(obj.image.url)
+        else:
+            return request.build_absolute_uri(obj.image_original.url)
+
+class CommenterSerializer(serializers.ModelSerializer):
+    author_profile = ProfileSerializer(source='author.profile', read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'content', 'created_at', 'author_profile')
+
 class PostCreateUpdateSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source="author.id")
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
+    author = serializers.ReadOnlyField(source="author.id", read_only=True)
+    _img = PostImageSerializer(many=True, source='img', read_only=True)
+    img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True, required=False)
 
     class Meta:
         model = Blog
-        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'image',)
+        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'img', '_img', "author_info",)
+        read_only_fields = ("author", "author_info",)
 
-    ##### 검증
     def validate_title(self, value):
         if len(value) == 0:
             return serializers.ValidationError("제목을 입력하지 않았습니다.")
         return value
 
-    ##### 검증
     def validate_content(self, value):
         if len(value) == 0:
             return serializers.ValidationError("내용을 입력하지 않았습니다.")
         return value
- 
-##### GET 요청(전체 게시글 조회) 시리얼라이저 - 요구사항 반영
+
+    def create(self, validated_data):
+        images = validated_data.pop('img', None)
+        post = Blog.objects.create(**validated_data)
+        if images:
+            for image in images:
+                BlogImage.objects.create(blog=post, image=image)
+        return post
+
 class PostListSerializer(serializers.ModelSerializer):
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     weight_value = serializers.SerializerMethodField(read_only=True)
+    img = PostImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Blog
-        fields = "__all__"
+        fields = ("id", "author", "title", "content", "created_at", "updated_at", "views", "img", "likes_count", "weight_value", "author_info",)
 
     def get_likes_count(self, obj):
         return obj.like_users.count()
 
     def get_weight_value(self, obj):
         return obj.WeightMethod()
+    
+    def get_img(self, obj):
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.img.url)
 
-##### GET/PUT/DELETE 요청(상세 보기 조회, 수정, 삭제) 시리얼라이저 - 요구사항 반영
 class PostDetailSerializer(serializers.ModelSerializer):
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     like_users = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)
-    image = serializers.SerializerMethodField()
-    author = serializers.ReadOnlyField(source="author.id")
+    _img = PostImageSerializer(many=True, source='img', read_only=True)
+    img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True)
+    comment_count = serializers.SerializerMethodField(read_only=True)
+    comments = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Blog
-        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'image', 'id',)
+        fields = ('id', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'id', "author_info",
+                "img", "_img", "comment_count", "comments",)
     
     def get_likes_count(self, obj):
         return obj.like_users.count()
@@ -63,31 +108,26 @@ class PostDetailSerializer(serializers.ModelSerializer):
         return UserInfoSerializer(like_users, many=True).data
 
     def get_comment_count(self, obj):
-        return obj.comment.count()  # 해당 게시물의 댓글 수 반환
-
-    def get_image(self, obj):
+        return obj.comment.count()
+        
+    def get_img(self, obj):
         request = self.context.get('request')
-        return request.build_absolute_uri(obj.image.url)
+        return request.build_absolute_uri(obj.img.url)
+    
+    def get_comments(self, obj):
+        comments = obj.comment.all()
+        return CommentSerializer(comments, many=True).data
 
-
-##### GET 요청(특정 게시물에 대한 모든 댓글 조회) 시리얼라이저 - 요구사항 반영
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source="author.id")
+    author_info = ProfileSerializer(source="user.profile", write_only=True)
+    author = serializers.ReadOnlyField(source="user.id")
     post = serializers.ReadOnlyField(source="post.id")
     id = serializers.ReadOnlyField()
 
     class Meta:
         model = Comment
-        fields = ("author", "id", "post", "content")
+        fields = ("id", "post", "content", "author", "author_info",)
 
-##### POST 요청(댓글 달기) 시리얼라이저 
-class CommentCreateUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Comment
-        fields = ("content", )
-
-##### GET/PUT/DELETE 요청(댓글 상세 조회, 수정, 삭제) 시리얼라이저
 class CommentCreateUpdateSerializer(serializers.ModelSerializer):
     post = serializers.ReadOnlyField(source="post.id")
     id = serializers.ReadOnlyField()
@@ -95,7 +135,6 @@ class CommentCreateUpdateSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('content', "id", "post",)
 
-##### 좋아요 시리얼라이저
 class PostLikeSerializer(serializers.ModelSerializer):
     email = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
@@ -111,13 +150,22 @@ class PostLikeSerializer(serializers.ModelSerializer):
         model = Blog
         fields = ('id', 'email', 'like_users', 'likes_count',)
 
-##### 인기 게시글 시리얼라이저
 class PopularPostSerializer(serializers.ModelSerializer):
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
+    author = serializers.ReadOnlyField(source="author.id", read_only=True)
+    likes_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField()
+    img = PostImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Blog
-        fields = "__all__"
+        fields = ("id", "author", "title", "content", "created_at", "updated_at", "views", "img", "comment_count", "likes_count", "author_info",)
+
+    def get_likes_count(self, obj):
+        return obj.like_users.count()
 
     def get_comment_count(self, obj):
-        return obj.comment.count()
+        return obj.get_comment_count()
+    
+    def get_img(self, obj):
+        return obj.image.url
