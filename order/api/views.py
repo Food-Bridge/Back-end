@@ -38,10 +38,10 @@ class OrderAPIView(generics.ListCreateAPIView):
     
     메뉴 1개, 옵션 1개, 선택옵션 1개 이상일 경우의 예
     ```
-    "deliver_address" : "배달 주소",
-    "coupon_code": "USERSIGNUP",
     {
-        "menu_list" : [
+    "deliver_address" : "배달 주소",
+    "coupon_code": "USERSIGNUP", // 혹은 null
+    "menu_list" : [
             {
             "menu_id": 1,
             "menu_name": "양념치킨",
@@ -75,7 +75,7 @@ class OrderAPIView(generics.ListCreateAPIView):
     "restaurant": 1,
     "order_state" : "order_complete",
     "payment_method" : "cash",
-    "restaurant": 0,
+    "restaurant": 1,
     }
     ```
     """
@@ -204,9 +204,6 @@ class OrderAPIView(generics.ListCreateAPIView):
                         order_instance.save()
                 except requests.exceptions.RequestException as e:
                     return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            # response = get_estimated_time(order_instance.id, user)
-            # order_serializer.data['estimate_time'] = response
             return Response(order_serializer.data, status=status.HTTP_201_CREATED)
         else:
             # 주문 데이터가 유효하지 않은 경우
