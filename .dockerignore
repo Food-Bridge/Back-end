@@ -3,4 +3,3 @@ fly.toml
 *.sqlite3
 venv
 tmp
-.env

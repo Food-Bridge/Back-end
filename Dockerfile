@@ -20,8 +20,11 @@ RUN set -ex && \
     pip install --upgrade pip && \
     pip install -r /tmp/requirements.txt && \
     rm -rf /root/.cache/
+    
 COPY . /code
 
+RUN python manage.py collectstatic --noinput
+    
 EXPOSE 8000
 
 CMD ["gunicorn", "--bind", ":8000", "--workers", "2", "smartorder.wsgi"]
