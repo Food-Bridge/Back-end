@@ -20,11 +20,11 @@ class Blog(models.Model):
         except:
             None
 
-    def get_comment_count(self, obj):
-        return obj.get_comment_count()
+    def get_comment_count(self):
+        return self.comment.count()
     
-    def get_likes_count(self, obj):
-        return obj.like_users.count()
+    def get_likes_count(self):
+        return len(self.like_users)
 
 class BlogImage(models.Model):
     """이미지 모델"""
