@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from ..models import Blog, Comment, BlogImage
+from users.models import Profile
 from users.models import User
-from django.conf import settings
 
-##### 사용자 정보 시리얼라이저
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -14,24 +13,37 @@ class PostImageSerializer(serializers.ModelSerializer):
         model = BlogImage
         fields = ("id", "image",)
 
-##### POST 요청(게시글 생성) 시리얼라이저 - 요구사항 반영
+class ProfileSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ('user', 'nickname', 'image')
+
+    def get_image(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.image.url)
+        else:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.image_original.url)
+
 class PostCreateUpdateSerializer(serializers.ModelSerializer):
-    author = serializers.ReadOnlyField(source="author.id")
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
+    author = serializers.ReadOnlyField(source="author.id", read_only=True)
     _img = PostImageSerializer(many=True, source='img', read_only=True)
     img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True, required=False)
 
     class Meta:
         model = Blog
-        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'img', '_img')
-        read_only_fields = ("author",)
+        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'img', '_img', "author_info",)
+        read_only_fields = ("author", "author_info",)
 
-    ##### 검증
     def validate_title(self, value):
         if len(value) == 0:
             return serializers.ValidationError("제목을 입력하지 않았습니다.")
         return value
 
-    ##### 검증
     def validate_content(self, value):
         if len(value) == 0:
             return serializers.ValidationError("내용을 입력하지 않았습니다.")
@@ -45,15 +57,15 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
                 BlogImage.objects.create(blog=post, image=image)
         return post
 
-##### GET 요청(전체 게시글 조회) 시리얼라이저 - 요구사항 반영
 class PostListSerializer(serializers.ModelSerializer):
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     weight_value = serializers.SerializerMethodField(read_only=True)
     img = PostImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Blog
-        fields = ("author", "title", "content", "created_at", "updated_at", "views", "img", "likes_count", "weight_value",)
+        fields = ("author", "title", "content", "created_at", "updated_at", "views", "img", "likes_count", "weight_value", "author_info",)
 
     def get_likes_count(self, obj):
         return obj.like_users.count()
@@ -65,17 +77,17 @@ class PostListSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return request.build_absolute_uri(obj.img.url)
 
-##### GET/PUT/DELETE 요청(상세 보기 조회, 수정, 삭제) 시리얼라이저 - 요구사항 반영
 class PostDetailSerializer(serializers.ModelSerializer):
+    author_info = ProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     like_users = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)
-    image = serializers.SerializerMethodField()
+    image = PostImageSerializer(many=True, read_only=True)
     author = serializers.ReadOnlyField(source="author.id")
 
     class Meta:
         model = Blog
-        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'image', 'id',)
+        fields = ('author', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'image', 'id', "author_info",)
     
     def get_likes_count(self, obj):
         return obj.like_users.count()
@@ -85,14 +97,12 @@ class PostDetailSerializer(serializers.ModelSerializer):
         return UserInfoSerializer(like_users, many=True).data
 
     def get_comment_count(self, obj):
-        return obj.comment.count()  # 해당 게시물의 댓글 수 반환
+        return obj.comment.count()
 
     def get_image(self, obj):
         request = self.context.get('request')
         return request.build_absolute_uri(obj.image.url)
 
-
-##### GET 요청(특정 게시물에 대한 모든 댓글 조회) 시리얼라이저 - 요구사항 반영
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.ReadOnlyField(source="author.id")
     post = serializers.ReadOnlyField(source="post.id")
@@ -100,16 +110,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ("author", "id", "post", "content")
+        fields = ("author", "id", "post", "content",)
 
-##### POST 요청(댓글 달기) 시리얼라이저 
-class CommentCreateUpdateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Comment
-        fields = ("content", )
-
-##### GET/PUT/DELETE 요청(댓글 상세 조회, 수정, 삭제) 시리얼라이저
 class CommentCreateUpdateSerializer(serializers.ModelSerializer):
     post = serializers.ReadOnlyField(source="post.id")
     id = serializers.ReadOnlyField()
@@ -117,7 +119,6 @@ class CommentCreateUpdateSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('content', "id", "post",)
 
-##### 좋아요 시리얼라이저
 class PostLikeSerializer(serializers.ModelSerializer):
     email = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
@@ -133,7 +134,6 @@ class PostLikeSerializer(serializers.ModelSerializer):
         model = Blog
         fields = ('id', 'email', 'like_users', 'likes_count',)
 
-##### 인기 게시글 시리얼라이저
 class PopularPostSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField()
