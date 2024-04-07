@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     ##### app_name
+    'order',
     'cart',
     'community',
     'coupon',
