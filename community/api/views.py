@@ -11,7 +11,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 
-from .permissions import IsCommentOwner
+from .permissions import IsCommentOwner, IsOwnerOrReadOnly
 from ..models import Blog, Comment, BlogImage
 from community.api.serializers import (PostCreateUpdateSerializer, 
                                        PostListSerializer, 
@@ -49,7 +49,7 @@ class CreatePostAPIView(APIView):
 class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Blog.objects.all()
     serializer_class = PostDetailSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def retrieve(self, request, pk=None):
         instance = get_object_or_404(self.get_queryset(), pk=pk)
