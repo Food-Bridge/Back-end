@@ -56,28 +56,21 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
         tomorrow = datetime.datetime.replace(timezone.datetime.now(), hour=23, minute=59, second=0)
         expires = datetime.datetime.strftime(tomorrow, "%a, %d-%b-%Y %H:%M:%S GMT")
 
-        serializer = self.get_serializer(instance, context={"request" : request})
+        serializer = self.get_serializer(instance)
         response = Response(serializer.data, status=status.HTTP_200_OK)
-
-        if request.user.is_authenticated:
-            user_id = request.user.id
-            user_cookie_key = f'user_{user_id}_hit'
-
-            if request.COOKIES.get(user_cookie_key) is not None:
-                cookies = request.COOKIES.get(user_cookie_key)
-                cookies_list = cookies.split("|")
-                if str(pk) not in cookies_list:
-                    response.set_cookie(user_cookie_key, cookies + f'|{pk}', expires=expires)
-                    with transaction.atomic():
-                        instance.views += 1
-                        instance.save()
-            else:
-                # 쿠키가 없는 경우, 새로 생성해서 해당 게시물 번호를 저장
-                response.set_cookie(user_cookie_key, f'{pk}', expires=expires)
+        
+        if request.COOKIES.get('history') is not None:
+            cookies = request.COOKIES.get('history')
+            cookies_list = cookies.split('|')
+            if str(instance.pk) not in cookies_list:
+                response.set_cookie('history', cookies+f'|{str(instance.pk)}', expires=expires, httponly=True)
                 instance.views += 1
                 instance.save()
+        else:
+            response.set_cookie('history', str(instance.pk), expires=expires, httponly=True)
+            instance.views += 1
+            instance.save()
         return response
-
     
     def put(self, request, *args, **kwargs):
         instance = self.get_object()
