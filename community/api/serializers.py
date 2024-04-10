@@ -15,7 +15,7 @@ class PostImageSerializer(serializers.ModelSerializer):
         model = BlogImage
         fields = ("id", "image",)
 
-class ProfileSerializer(serializers.ModelSerializer):
+class CommunityProfileSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
 
     class Meta:
@@ -30,14 +30,14 @@ class ProfileSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.image_original.url)
 
 class CommenterSerializer(serializers.ModelSerializer):
-    author_profile = ProfileSerializer(source='author.profile', read_only=True)
+    author_profile = CommunityProfileSerializer(source='author.profile', read_only=True)
 
     class Meta:
         model = Comment
         fields = ('id', 'content', 'created_at', 'author_profile')
 
 class PostCreateUpdateSerializer(serializers.ModelSerializer):
-    author_info = ProfileSerializer(source="author.profile", read_only=True)
+    author_info = CommunityProfileSerializer(source="author.profile", read_only=True)
     author = serializers.ReadOnlyField(source="author.id", read_only=True)
     _img = PostImageSerializer(many=True, source='img', read_only=True)
     img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True, required=False)
@@ -66,7 +66,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         return post
 
 class PostListSerializer(serializers.ModelSerializer):
-    author_info = ProfileSerializer(source="author.profile", read_only=True)
+    author_info = CommunityProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     weight_value = serializers.SerializerMethodField(read_only=True)
     img = PostImageSerializer(many=True, read_only=True)
@@ -86,7 +86,7 @@ class PostListSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(obj.img.url)
 
 class PostDetailSerializer(serializers.ModelSerializer):
-    author_info = ProfileSerializer(source="author.profile", read_only=True)
+    author_info = CommunityProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     like_users = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)
@@ -119,7 +119,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
         return CommentSerializer(comments, many=True).data
 
 class CommentSerializer(serializers.ModelSerializer):
-    author_info = ProfileSerializer(source="user.profile", write_only=True)
+    author_info = CommunityProfileSerializer(source="user.profile", write_only=True)
     author = serializers.ReadOnlyField(source="user.id")
     post = serializers.ReadOnlyField(source="post.id")
     id = serializers.ReadOnlyField()
@@ -151,7 +151,7 @@ class PostLikeSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'like_users', 'likes_count',)
 
 class PopularPostSerializer(serializers.ModelSerializer):
-    author_info = ProfileSerializer(source="author.profile", read_only=True)
+    author_info = CommunityProfileSerializer(source="author.profile", read_only=True)
     author = serializers.ReadOnlyField(source="author.id", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField()
