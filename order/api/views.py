@@ -85,7 +85,7 @@ class OrderAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Order.objects.filter(user=user)
+        return Order.objects.select_related('user', 'restaurant').filter(user=user)
 
     def post(self, request, *args, **kwargs):
         restaurant_id = request.data.get('restaurant')
@@ -169,6 +169,24 @@ class OrderAPIView(generics.ListCreateAPIView):
                     total_price = 0
             except Coupon.DoesNotExist:
                 return Response({'error': '유효하지 않은 쿠폰 코드입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # 배달 시간 계산
+        estimate_time = 0
+        if deliver_address:
+            try:
+                geocoded_data = geocode_address(deliver_address)
+                if geocoded_data:
+                    if geocoded_data['latitude'] == 127 or geocoded_data == 0:
+                        return Response({'erro': "배달 주소를 다시 입력해주세요"}, status=status.HTTP_400_BAD_REQUEST)
+                    estimate_time = get_estimated_time(
+                        res_id=restaurant_id,
+                        longitude=geocoded_data.get('longitude'),
+                        latitude=geocoded_data.get('latitude')
+                    )
+            except requests.exceptions.RequestException as e:
+                return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'error': '배달 주소를 확인해주세요'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 주문 생성
         order_data = {
@@ -179,6 +197,7 @@ class OrderAPIView(generics.ListCreateAPIView):
             'payment_method': request.data.get('payment_method'),
             'order_state': request.data.get('order_state'),
             'deliver_address' : deliver_address,
+            'estimate_time' : estimate_time,
             'menu_list' : menu_data,
             'option_list' : option_data,
             'soption_list' : soption_data,
@@ -188,25 +207,9 @@ class OrderAPIView(generics.ListCreateAPIView):
 
         if order_serializer.is_valid():
             # 주문 데이터가 유효한 경우
-            order_instance = order_serializer.save()  # 주문을 저장하고 인스턴스를 반환합니다.
+            order_serializer.save()  # 주문을 저장하고 인스턴스를 반환합니다.
             # 해당 식당의 주문 수 증가
             Restaurant.objects.filter(pk=restaurant_id).update(orderCount=F('orderCount') + 1)
-
-            # 배달 주소 위경도 처리
-            if deliver_address:
-                try:
-                    geocoded_data = geocode_address(deliver_address)
-                    if geocoded_data:
-                        if geocoded_data['latitude'] == 127:
-                            return Response({'erro': "배달 주소를 다시 입력해주세요"}, status=status.HTTP_400_BAD_REQUEST)
-                        order_instance.latitude = geocoded_data.get('latitude')
-                        order_instance.longitude = geocoded_data.get('longitude')
-                        order_instance.save()
-                except requests.exceptions.RequestException as e:
-                    return Response({'error': f"Error during geocoding: {e}"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            # response = get_estimated_time(order_instance.id, user)
-            # order_serializer.data['estimate_time'] = response
             return Response(order_serializer.data, status=status.HTTP_201_CREATED)
         else:
             # 주문 데이터가 유효하지 않은 경우

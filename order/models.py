@@ -57,6 +57,7 @@ class Order(models.Model):
         verbose_name="주문서 상태",
         max_length=16
     )
+    estimate_time = models.PositiveIntegerField(default=0)  # 주문의 배달 예상 시간
 
     # DecimalField
     latitude = models.DecimalField(

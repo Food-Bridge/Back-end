@@ -24,31 +24,17 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from django.conf import settings
 
-def get_estimated_time(order_id, user):
-    try:
-        order = Order.objects.get(id=order_id)
-    except Order.DoesNotExist:
-        return Response({"error": "주문 내역이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+def get_estimated_time(res_id, longitude, latitude):
 
     try:
-        # 주문의 식당 정보를 출발지로 설정
-        origin_latitude = order.restaurant.latitude
-        origin_longitude = order.restaurant.longitude
+        restaurant = Restaurant.objects.get(id=res_id)
     except Restaurant.DoesNotExist:
-        return Response({"error": "주문에 대한 식당 정보를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
-    try:
-        # 사용자가 등록한 기본 주소를 도착지로 설정
-        default_address = Address.objects.get(user=user, is_default=True)
-        destination_latitude = default_address.latitude
-        destination_longitude = default_address.longitude
-    except Address.DoesNotExist:
-        return Response({"error": "기본 주소지로 등록된 주소가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
+        return {'error' : "매장 ID를 다시 확인하십시오"}
+    
     # 음식점별 조리 시간이 필요할 것으로 보임(일단은 접수 후 바로 출발하는 것으로 가정)
     departure_time = datetime.now().strftime("%Y%m%d%H%M")
-    origin = origin_longitude, origin_latitude
-    destination = destination_longitude, destination_latitude
+    origin = restaurant.longitude, restaurant.latitude
+    destination = longitude, latitude
     priority = "DISTANCE"
     car_type = 7
 
