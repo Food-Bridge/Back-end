@@ -20,7 +20,6 @@ class OrderSerializer(serializers.ModelSerializer):
     
     delivery_state_name = serializers.CharField(source='get_delivery_state_display', read_only=True)
     phonenumber = serializers.ReadOnlyField(source="user.phone_number", read_only=True)
-    estimate_time = serializers.SerializerMethodField()
     
     # 레스토랑 이미지
     def get_restaurant_image(self, obj):
@@ -60,9 +59,3 @@ class OrderSerializer(serializers.ModelSerializer):
             "order_id",
             "estimate_time"
         ]
-    
-    def get_estimate_time(self, obj):
-        order_id = obj.id
-        user = obj.user
-        estimated_time_data = get_estimated_time(order_id, user)
-        return estimated_time_data
