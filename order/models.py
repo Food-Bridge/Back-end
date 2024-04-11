@@ -75,3 +75,8 @@ class Order(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'restaurant']),  # user와 restaurant 필드에 인덱스 추가
+        ]
