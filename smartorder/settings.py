@@ -10,11 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
+import environ 
 from pathlib import Path
 from datetime import timedelta
-import dj_database_url
-import environ 
 from django.core.management.utils import get_random_secret_key
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -331,3 +332,10 @@ SWAGGER_SETTINGS = {
         'BearerAuth': []
     }]
 }
+
+# sentry.io 설정
+sentry_sdk.init(
+    dsn=env.str("SENTRY_DSN"),
+    integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
+)
