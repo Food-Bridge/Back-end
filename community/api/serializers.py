@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from ..models import Blog, Comment, BlogImage
-from users.models import Profile
 from users.models import User
+from users.api.serializers import ProfileSerializer
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 
@@ -16,22 +16,6 @@ class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlogImage
         fields = ("id", "image",)
-
-
-class ProfileSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Profile
-        fields = ('user', 'nickname', 'image')
-
-    def get_image(self, obj):
-        request = self.context.get('request')
-        if obj.image:
-            return request.build_absolute_uri(obj.image.url)
-        else:
-            return request.build_absolute_uri(obj.image_original.url)
-
 
 class CommenterSerializer(serializers.ModelSerializer):
     author_profile = ProfileSerializer(source='author.profile', read_only=True)
