@@ -289,7 +289,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
 ##### s3 관련 설정
-USE_S3 = env('USE_S3') == 'TRUE'
+USE_S3 = env('USE_S3')
 if USE_S3:
     # aws settings
     AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
