@@ -57,6 +57,7 @@ class Order(models.Model):
         verbose_name="주문서 상태",
         max_length=16
     )
+    estimate_time = models.PositiveIntegerField(default=0)  # 주문의 배달 예상 시간
 
     # DecimalField
     latitude = models.DecimalField(
@@ -74,3 +75,8 @@ class Order(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'restaurant']),  # user와 restaurant 필드에 인덱스 추가
+        ]
