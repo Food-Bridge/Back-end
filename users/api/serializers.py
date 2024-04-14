@@ -149,7 +149,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     class Meta:
         model = Profile
-        fields = ['user_id', 'nickname', 'image']
+        fields = ['user', 'nickname', 'image']
         
     def create(self, validated_data):
         instance = Profile.objects.create(**validated_data)
