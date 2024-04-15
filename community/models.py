@@ -2,7 +2,7 @@ from django.db import models
 from users.models import User
 from django.shortcuts import reverse
 
-class Blog(models.Model):
+class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     like_users = models.ManyToManyField(User, related_name='like_articles')
     title = models.CharField(max_length=50)
@@ -26,13 +26,13 @@ class Blog(models.Model):
     def get_likes_count(self):
         return len(self.like_users)
 
-class BlogImage(models.Model):
+class PostImage(models.Model):
     """이미지 모델"""
-    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name="img")
+    blog = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="img")
     image = models.ImageField(upload_to="community/%Y/%m/%d")
 
 class Comment(models.Model):
-    post = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='comment')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)

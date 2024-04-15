@@ -1,9 +1,7 @@
 from rest_framework import serializers
-from ..models import Blog, Comment, BlogImage
+from ..models import Post, Comment, PostImage
 from users.models import User
 from users.api.serializers import ProfileSerializer
-from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
@@ -14,7 +12,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
 class PostImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BlogImage
+        model = PostImage
         fields = ("id", "image",)
 
 class CommenterSerializer(serializers.ModelSerializer):
@@ -33,7 +31,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
     ), write_only=True, allow_null=True, required=False)
 
     class Meta:
-        model = Blog
+        model = Post
         fields = ('author', 'title', 'content', 'created_at',
                   'updated_at', 'img', '_img', "author_info",)
         read_only_fields = ("author", "author_info",)
@@ -50,10 +48,10 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         images = validated_data.pop('img', None)
-        post = Blog.objects.create(**validated_data)
+        post = Post.objects.create(**validated_data)
         if images:
             for image in images:
-                BlogImage.objects.create(blog=post, image=image)
+                PostImage.objects.create(blog=post, image=image)
         return post
 
 
@@ -64,7 +62,7 @@ class PostListSerializer(serializers.ModelSerializer):
     img = PostImageSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Blog
+        model = Post
         fields = ("id", "author", "title", "content", "created_at", "updated_at",
                   "views", "img", "likes_count", "weight_value", "author_info",)
 
@@ -91,7 +89,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = Blog
+        model = Post
         fields = ('id', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'id', "author_info",
                   "img", "_img", "comment_count", "comments",)
 
@@ -151,7 +149,7 @@ class PostLikeSerializer(serializers.ModelSerializer):
         return obj.like_users.count()
 
     class Meta:
-        model = Blog
+        model = Post
         fields = ('id', 'email', 'like_users', 'likes_count',)
 
 
@@ -163,7 +161,7 @@ class PopularPostSerializer(serializers.ModelSerializer):
     img = PostImageSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Blog
+        model = Post
         fields = ("id", "author", "title", "content", "created_at", "updated_at",
                   "views", "img", "comment_count", "likes_count", "author_info",)
 
