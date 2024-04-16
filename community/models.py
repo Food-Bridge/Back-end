@@ -11,8 +11,8 @@ class Post(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     views = models.IntegerField(default=0)
 
-    def WeightMethod(self):
-        return self.views + self.like_users.count() + self.comment.count()    
+    def standard_method(self):
+        return self.like_users.count() + self.comment.count()    
     
     def get_api_url(self):
         try:
@@ -34,7 +34,7 @@ class PostImage(models.Model):
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.TextField()
+    content = models.CharField(max_length=50, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     comment = models.IntegerField(default=0)

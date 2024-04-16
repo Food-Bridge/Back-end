@@ -17,9 +17,9 @@ from community.api.serializers import (PostCreateUpdateSerializer,
                                        PostListSerializer, 
                                        PostDetailSerializer, 
                                        CommentSerializer, 
+                                       CommenterSerializer,
                                        CommentCreateUpdateSerializer,
-                                       PostLikeSerializer,
-                                       PopularPostSerializer)
+                                       PostLikeSerializer)
 from community.api.pagination import PostLimitOffsetPagination
 from community.api.mixins import MutlipleFieldMixin
 
@@ -149,7 +149,7 @@ class LatestPostsAPIView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class DailyPopularPostAPIView(APIView):
-    serializer_class = PopularPostSerializer
+    serializer_class = PostListSerializer
     permission_classes = [AllowAny]
     def get(self, request, *args, **kwargs):
         today = timezone.localtime(timezone.now())
@@ -158,12 +158,12 @@ class DailyPopularPostAPIView(APIView):
 
         popular_posts = Post.objects.filter(created_at__range=[start_of_today, end_of_today])
         popular_posts = popular_posts.annotate(comment_count=Count('comment'), like_users_count=Count('like_users'))
-        popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
-        serializer = PopularPostSerializer(popular_posts, many=True, context={'request': request})
+        popular_posts = popular_posts.annotate(total_weight=F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
+        serializer = PostListSerializer(popular_posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class WeekPopularPostAPIView(APIView):
-    serializer_class = PopularPostSerializer
+    serializer_class = PostListSerializer
     permission_classes = [AllowAny]
     def get(self, request, *args, **kwargs):
         start_of_week = timezone.localtime(timezone.now()) - datetime.timedelta(days=timezone.localtime(timezone.now()).weekday())
@@ -176,6 +176,6 @@ class WeekPopularPostAPIView(APIView):
 
         popular_posts = Post.objects.filter(created_at__range=[start_of_week, end_of_week])
         popular_posts = popular_posts.annotate(comment_count=Count('comment'),  like_users_count=Count('like_users'))
-        popular_posts = popular_posts.annotate(total_weight=F('views') + F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
-        serializer = PopularPostSerializer(popular_posts, many=True, context={'request': request})
+        popular_posts = popular_posts.annotate(total_weight=F('comment_count') + F('like_users_count')).order_by('-total_weight')[:10]
+        serializer = PostListSerializer(popular_posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
