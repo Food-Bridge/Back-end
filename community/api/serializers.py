@@ -27,14 +27,18 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
     author_info = ProfileSerializer(source="author.profile", read_only=True)
     author = serializers.ReadOnlyField(source="author.id", read_only=True)
     _img = PostImageSerializer(many=True, source='img', read_only=True)
-    img = serializers.ListField(child=serializers.ImageField(
-    ), write_only=True, allow_null=True, required=False)
+    img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True, required=False)
 
     class Meta:
         model = Post
-        fields = ('author', 'title', 'content', 'created_at',
-                  'updated_at', 'img', '_img', "author_info",)
-        read_only_fields = ("author", "author_info",)
+        fields = ('author', 
+                  'title', 
+                  'content', 
+                  'created_at',
+                  'updated_at', 
+                  'img', 
+                  '_img', 
+                  "author_info",)
 
     def validate_title(self, value):
         if len(value) == 0:
@@ -59,12 +63,23 @@ class PostListSerializer(serializers.ModelSerializer):
     author_info = ProfileSerializer(source="author.profile", read_only=True)
     likes_count = serializers.SerializerMethodField(read_only=True)
     weight_value = serializers.SerializerMethodField(read_only=True)
-    img = PostImageSerializer(many=True, read_only=True)
+    _img = PostImageSerializer(many=True, source='img', read_only=True)   
+    img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True, required=False)
 
     class Meta:
         model = Post
-        fields = ("id", "author", "title", "content", "created_at", "updated_at",
-                  "views", "img", "likes_count", "weight_value", "author_info",)
+        fields = ("id", 
+                  "author", 
+                  "title",
+                  "content", 
+                  "created_at", 
+                  "updated_at",
+                  "views",
+                  "_img",
+                  "img", 
+                  "likes_count", 
+                  "weight_value", 
+                  "author_info",)
 
     def get_likes_count(self, obj):
         return obj.like_users.count()
@@ -82,9 +97,8 @@ class PostDetailSerializer(serializers.ModelSerializer):
     likes_count = serializers.SerializerMethodField(read_only=True)
     like_users = serializers.SerializerMethodField(read_only=True)
     comment_count = serializers.SerializerMethodField(read_only=True)
-    _img = PostImageSerializer(many=True, source='img', read_only=True)
-    img = serializers.ListField(
-        child=serializers.ImageField(), write_only=True, allow_null=True)
+    _img = PostImageSerializer(many=True, source='img', read_only=True, allow_null=True)
+    img = serializers.ListField(child=serializers.ImageField(), write_only=True, allow_null=True, required=False)
     comment_count = serializers.SerializerMethodField(read_only=True)
     comments = serializers.SerializerMethodField(read_only=True)
 

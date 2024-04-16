@@ -5,8 +5,8 @@ from django.shortcuts import reverse
 class Post(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     like_users = models.ManyToManyField(User, related_name='like_articles')
-    title = models.CharField(max_length=50)
-    content = models.TextField()
+    title = models.CharField(max_length=50, blank=False)
+    content = models.CharField(max_length=500, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     views = models.IntegerField(default=0)
@@ -28,8 +28,8 @@ class Post(models.Model):
 
 class PostImage(models.Model):
     """이미지 모델"""
-    blog = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="img")
-    image = models.ImageField(upload_to="community/%Y/%m/%d")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="img")
+    image = models.ImageField(upload_to="community/%Y/%m/%d", null=True, blank=True)
 
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comment')

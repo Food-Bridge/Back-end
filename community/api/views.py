@@ -79,18 +79,20 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
         return response
 
     
-    def put(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        instance.img.all().delete()
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
-        images_data = request.FILES.getlist('img')
-        if images_data:
-            for image_data in images_data:
-                image = PostImage.objects.create(blog=instance, image=image_data)
-                instance.img.add(image)
-        return self.update(request, *args, **kwargs)
+        image_set = request.FILES
+        for image_data in image_set.getlist('img'):
+            PostImage.objects.create(post=instance, image=image_data)
+
+        instance.title = serializer.validated_data.get('title', instance.title)
+        instance.content = serializer.validated_data.get('content', instance.content)
+        instance.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ListCommentAPIView(APIView):
     serializer_class = CommentSerializer
