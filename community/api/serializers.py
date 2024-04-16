@@ -55,7 +55,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         post = Post.objects.create(**validated_data)
         if images:
             for image in images:
-                PostImage.objects.create(blog=post, image=image)
+                PostImage.objects.create(post=post, image=image)
         return post
 
 
