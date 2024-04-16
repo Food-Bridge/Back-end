@@ -20,7 +20,7 @@ class CommenterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'content', 'created_at', 'author_profile')
+        fields = ('id', 'content', 'author_profile')
 
 
 class PostCreateUpdateSerializer(serializers.ModelSerializer):
@@ -104,8 +104,20 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('id', 'title', 'content', 'created_at', 'updated_at', 'like_users', 'comment_count', 'views', 'likes_count', 'id', "author_info",
-                  "img", "_img", "comment_count", "comments",)
+        fields = ('id', 
+                  'title', 
+                  'content', 
+                  'created_at', 
+                  'updated_at', 
+                  'like_users', 
+                  'comment_count', 
+                  'views', 
+                  'likes_count', 
+                  'author_info',
+                  'img', 
+                  '_img', 
+                  'comment_count', 
+                  'comments',)
 
     def get_likes_count(self, obj):
         return obj.like_users.count()
@@ -123,7 +135,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     def get_comments(self, obj):
         comments = obj.comment.all()
-        return CommentSerializer(comments, many=True).data
+        return CommenterSerializer(comments, many=True, context=self.context).data
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -146,7 +146,7 @@ class SocialLoginSerializer(serializers.Serializer):
     access_token = serializers.CharField()
 
 class ProfileSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
+        
     class Meta:
         model = Profile
         fields = ['user', 'nickname', 'image']
@@ -163,9 +163,9 @@ class ProfileSerializer(serializers.ModelSerializer):
                 Profile.objects.create(article=instance, image_original=image_data)
         return instance
     
-    def get_image(self, obj):
-        request = self.context.get('request')
-        if obj.image:
-            return request.build_absolute_uri(obj.image.url)
-        else:
-            return request.build_absolute_uri(obj.image_original.url)
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # 이미지가 없는 경우에는 image_original 값을 반환
+        if not ret['image']:
+            ret['image'] = self.context['request'].build_absolute_uri(settings.MEDIA_URL + str(instance.image_original))
+        return ret
