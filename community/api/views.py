@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import F, Count
 from django.db import transaction
+from django.core.files.uploadedfile import UploadedFile
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -53,13 +54,17 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
     
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        instance.img.all().delete()
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        image_set = request.FILES
-        for image_data in image_set.getlist('img'):
-            PostImage.objects.create(post=instance, image=image_data)
+        image_set = request.FILES.getlist('img')
+        if image_set:
+            instance.img.all().delete()
+            for image_data in image_set:
+                if isinstance(image_data, UploadedFile):
+                    PostImage.objects.create(post=instance, image=image_data)
+        else:
+            instance.img.all().delete()
 
         instance.title = serializer.validated_data.get('title', instance.title)
         instance.content = serializer.validated_data.get('content', instance.content)
