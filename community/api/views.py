@@ -63,8 +63,6 @@ class DetailPostAPIView(generics.RetrieveUpdateDestroyAPIView):
             for image_data in image_set:
                 if isinstance(image_data, UploadedFile):
                     PostImage.objects.create(post=instance, image=image_data)
-        else:
-            instance.img.all().delete()
 
         instance.title = serializer.validated_data.get('title', instance.title)
         instance.content = serializer.validated_data.get('content', instance.content)
