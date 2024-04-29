@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from community.models import Blog
+from community.models import Post
 
 class MutlipleFieldMixin:
     """
@@ -9,7 +9,7 @@ class MutlipleFieldMixin:
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         filter = {}
-        post_pk = Blog.objects.get(pk=self.kwargs['pk']).id
+        post_pk = Post.objects.get(pk=self.kwargs['pk']).id
         filter["post"] = post_pk
         filter["id"] = self.kwargs["id"]
         obj = get_object_or_404(queryset, **filter)

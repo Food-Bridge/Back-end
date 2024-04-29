@@ -7,11 +7,8 @@ def update_daily_popular_posts():
         daily_popular_view = DailyPopularPostAPIView()
         response = daily_popular_view.get(None)
         serializer_data = response.data
-        print(serializer_data)
-        print("일간 인기글이 갱신이 되었습니다.")
         return serializer_data
     except Exception as e:
-        print(f"Error updating daily popular posts: {e}")
         return None
 
 def update_weekly_popular_posts():
@@ -19,11 +16,8 @@ def update_weekly_popular_posts():
         weekly_popular_view = WeekPopularPostAPIView()
         response = weekly_popular_view.get(None)
         serializer_data = response.data
-        print(serializer_data)
-        print("주간 인기글이 갱신되었습니다.")
         return serializer_data
     except Exception as e:
-        print(f"Error updating weekly popular posts: {e}")
         return None
 
 def dailyschedule():
